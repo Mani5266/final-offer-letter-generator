@@ -4,7 +4,7 @@ const { Paragraph, AlignmentType } = require('docx');
 
 function getAnnexureB(d, helpers, tables, constants, numberUtils) {
   const { docTitle, body, run, blank, sigTable, pageBreak } = { ...helpers, ...tables };
-  const orgName   = d.orgName || 'OnEasy Consultants Private Limited';
+  const orgName   = d.orgName || '';
   const workDays  = `${d.workDayFrom || 'Monday'} to ${d.workDayTo || 'Saturday'}`;
   const workTime  = `${d.workStart || '10:30 AM'} to ${d.workEnd || '7:30 PM'} IST`;
 

@@ -9,7 +9,7 @@ function getAnnexureA(d, helpers, tables, constants, numberUtils) {
   const ctc       = parseInt(d.annualCTC) || 0;
   const ctcWords  = toWords(ctc);
   const breakdown = buildBreakdown(ctc);
-  const orgName   = d.orgName || 'OnEasy Consultants Private Limited';
+  const orgName   = d.orgName || '';
 
   return [
     pageBreak(),

@@ -1,33 +1,30 @@
 :root {
-  /* Core Colors - Professional Deep Navy & Refined Gold */
+  /* Core Colors */
   --primary: #0f172a;       /* Slate 900 */
   --primary-light: #1e293b; /* Slate 800 */
-  --accent: #d4af37;        /* Metallic Gold */
-  --accent-hover: #f1c40f;  /* Brighter Gold */
-  
+
   /* Backgrounds */
   --bg-main: #f8fafc;       /* Slate 50 */
   --bg-card: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.8);
-  
+
   /* Text */
   --text-main: #1e293b;     /* Slate 800 */
   --text-muted: #64748b;    /* Slate 500 */
   --text-on-dark: #f8fafc;
-  
+
   /* Status */
   --success: #10b981;
   --error: #ef4444;
   --warning: #f59e0b;
-  
+
   /* Borders & Shadows */
   --border: #e2e8f0;        /* Slate 200 */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+
   /* Utils */
-  --radius: 12px;
-  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-sm: 6px;
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

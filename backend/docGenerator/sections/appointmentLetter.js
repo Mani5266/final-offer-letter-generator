@@ -11,7 +11,7 @@ function getAppointmentLetter(d, helpers, tables, constants, numberUtils) {
   const ctcWords  = toWords(ctc);
   const firstName = (d.empFullName || '').split(' ')[0];
   const salute    = d.salutation || 'Mr.';
-  const orgName   = d.orgName || 'OnEasy Consultants Private Limited';
+  const orgName   = d.orgName || '';
   const workDays  = `${d.workDayFrom || 'Monday'} to ${d.workDayTo || 'Saturday'}`;
   const workTime  = `${d.workStart || '10:30 AM'} to ${d.workEnd || '7:30 PM'} IST`;
 
@@ -194,8 +194,8 @@ function getAppointmentLetter(d, helpers, tables, constants, numberUtils) {
     body(`For ${orgName}`, { bold: true }),
     body(''),
     body('________________________________'),
-    body(d.signatoryName || 'CA Abhishek Boddu', { bold: true }),
-    body(d.signatoryDesignation || 'Director'),
+    body(d.signatoryName || '', { bold: true }),
+    body(d.signatoryDesignation || ''),
 
     ...blank(2),
     new Paragraph({

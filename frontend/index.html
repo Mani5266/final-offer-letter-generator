@@ -3,382 +3,418 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>OnEasy — Offer Letter Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Supabase Client -->
+<title>OnEasy - Offer Letter Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/main.css"/>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-logo">
-    <div class="logo-icon">OE</div>
-    <div>
-      <span class="logo-text">OnEasy</span>
-      <span class="logo-sub">Offer Letter Generator</span>
-    </div>
-  </div>
-  <div class="header-center" id="headerNav" style="display:none;">
-    <button class="header-nav-tab active" id="navGenerator" data-page="generator">GENERATOR</button>
-    <button class="header-nav-tab" id="navHistory" data-page="history">HISTORY</button>
-  </div>
-  <div class="header-right">
-    <div id="userMenu" style="display:none; align-items: center; gap: 1rem;">
-      <span id="userEmailDisplay" class="header-email"></span>
-      <button class="btn-signout" id="logoutBtn">Sign Out</button>
-    </div>
-    <span class="header-tagline" id="headerTagline">AI-POWERED · LEGALLY COMPLIANT · INSTANT DOCX</span>
-  </div>
-</div>
-
+<!-- ── AUTH OVERLAY ── -->
 <div id="authOverlay" class="auth-overlay">
-  <div class="auth-card">
-    <div style="text-align:center; margin-bottom: 2rem;">
-      <div class="logo-icon" style="margin: 0 auto 1.5rem; width: 48px; height: 48px; font-size: 1.4rem;">OE</div>
-      <h2 style="font-weight: 800; color: var(--primary); letter-spacing: -0.02em;">Welcome to OnEasy</h2>
-      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.4rem;">Sign in to generate professional documents.</p>
+  <div class="auth-split">
+    <div class="auth-brand">
+      <div class="auth-brand-inner">
+        <div class="auth-brand-logo">OnEasy</div>
+        <h1 class="auth-brand-title">Offer Letter Generator</h1>
+        <p class="auth-brand-desc">Generate legally compliant offer and appointment letters in minutes. Professional, accurate, and ready to sign.</p>
+        <div class="auth-brand-features">
+          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> AI-Powered Document Generation</div>
+          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> Legally Compliant Templates</div>
+          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> Instant DOCX Export</div>
+        </div>
+      </div>
+      <div class="auth-brand-footer">&copy; 2026 OnEasy. All rights reserved.</div>
     </div>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="loginTab">Login</button>
-      <button class="auth-tab" id="signupTab">Sign Up</button>
+    <div class="auth-form-panel">
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <h2 class="auth-card-title">Sign in to your account</h2>
+          <p class="auth-card-subtitle">Enter your credentials to access the dashboard.</p>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="loginTab">Login</button>
+          <button class="auth-tab" id="signupTab">Sign Up</button>
+        </div>
+        <div id="loginForm" class="auth-form-body">
+          <div class="auth-field">
+            <label class="auth-label" for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" class="auth-input" placeholder="name@company.com"/>
+          </div>
+          <div class="auth-field">
+            <label class="auth-label" for="loginPass">Password</label>
+            <input type="password" id="loginPass" class="auth-input" placeholder="Enter your password"/>
+          </div>
+          <button class="auth-submit" id="loginSubmit">Sign In</button>
+        </div>
+        <div id="signupForm" style="display:none" class="auth-form-body">
+          <div class="auth-field">
+            <label class="auth-label" for="signupName">Full Name</label>
+            <input type="text" id="signupName" class="auth-input" placeholder="Your full name"/>
+          </div>
+          <div class="auth-field">
+            <label class="auth-label" for="signupEmail">Email Address</label>
+            <input type="email" id="signupEmail" class="auth-input" placeholder="name@company.com"/>
+          </div>
+          <div class="auth-field">
+            <label class="auth-label" for="signupPass">Password</label>
+            <input type="password" id="signupPass" class="auth-input" placeholder="Minimum 8 characters"/>
+          </div>
+          <button class="auth-submit" id="signupSubmit">Create Account</button>
+        </div>
+        <div class="alert error" id="authError" style="margin-top: 1.25rem; font-size: 0.82rem;"></div>
+      </div>
     </div>
-    
-    <div id="loginForm" class="auth-form-body">
-      <div class="field">
-        <label>Work Email</label>
-        <input type="email" id="loginEmail" placeholder="name@company.com"/>
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="loginPass" placeholder="••••••••"/>
-      </div>
-      <button class="btn btn-gen" style="width:100%; padding: 0.9rem;" id="loginSubmit">Access Dashboard</button>
-    </div>
-
-    <div id="signupForm" style="display:none" class="auth-form-body">
-      <div class="field">
-        <label>Full Name</label>
-        <input type="text" id="signupName" placeholder="CA Abhishek Boddu"/>
-      </div>
-      <div class="field">
-        <label>Work Email</label>
-        <input type="email" id="signupEmail" placeholder="name@company.com"/>
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="signupPass" placeholder="Minimum 8 characters"/>
-      </div>
-      <button class="btn btn-gen" style="width:100%; padding: 0.9rem;" id="signupSubmit">Create Professional Account</button>
-    </div>
-    <div class="alert error" id="authError" style="margin-top: 1.5rem; font-size: 0.8rem;"></div>
   </div>
 </div>
 
-<div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+<!-- ── APP SHELL ── -->
+<div class="app-shell" id="appShell" style="display:none;">
 
-<nav class="steps-nav">
-  <button class="step-tab active" data-step="0">Company</button>
-  <button class="step-tab" data-step="1">Employee</button>
-  <button class="step-tab" data-step="2">Compensation</button>
-  <button class="step-tab" data-step="3">Employment</button>
-  <button class="step-tab" data-step="4">Policies</button>
-  <button class="step-tab" data-step="5">Review &amp; Generate</button>
-</nav>
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">O</div>
+        <div class="sidebar-logo-text">
+          <span class="sidebar-brand">OnEasy</span>
+          <span class="sidebar-brand-sub">Offer Letter Generator</span>
+        </div>
+      </div>
 
-<div class="main">
+      <button class="sidebar-new-btn" id="newOfferBtn">
+        <span class="sidebar-new-icon">+</span>
+        New Offer Letter
+      </button>
 
-  <!-- AI CHAT SIDEBAR -->
-  <aside class="ai-panel">
-    <div class="ai-head">
-      <div class="ai-dot">AI</div>
-      <div>
-        <div class="ai-name">OnEasy Assistant</div>
-        <div class="ai-status">● Online</div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span class="sidebar-section-title">RECENT OFFER LETTERS</span>
+          <button class="sidebar-view-all" id="viewAllBtn">View All</button>
+        </div>
+        <div class="sidebar-drafts" id="sidebarDrafts">
+          <div class="sidebar-empty">No drafts yet. Create your first offer letter above.</div>
+        </div>
       </div>
     </div>
-    <div class="chat-body" id="chatBody">
-      <div class="ai-msg">Welcome! I'll guide you through generating a <b>legally compliant Offer &amp; Appointment Letter</b> for your new hire.<br><br>Start by filling in your <b>company details</b> on the right.</div>
-    </div>
-    <div class="chat-input-row">
-      <input class="chat-in" id="chatIn" placeholder="Ask anything about the form…" autocomplete="off"/>
-      <button class="chat-send" id="chatBtn">➤</button>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="userAvatar">U</div>
+        <span class="sidebar-email" id="userEmailDisplay"></span>
+        <button class="sidebar-signout" id="logoutBtn" title="Sign Out">Sign Out</button>
+      </div>
     </div>
   </aside>
 
-  <!-- FORM -->
-  <div class="form-card">
+  <!-- RIGHT MAIN CONTENT -->
+  <div class="content-area">
 
-    <!-- STEP 0: COMPANY -->
-    <div class="step-pane active" id="step-0">
-      <div class="step-title">🏢 Company Information</div>
-      <div class="step-desc">This appears on the letterhead and throughout the document.</div>
+    <!-- GENERATOR PAGE -->
+    <div id="generatorPage" class="generator-page">
+      <div class="generator-top-bar">
+        <button class="btn-refresh-nav" id="refreshFormBtn" title="Reset form and start over">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="content-header">
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+        <nav class="steps-nav">
+          <button class="step-tab active" data-step="0">Company</button>
+          <button class="step-tab" data-step="1">Employee</button>
+          <button class="step-tab" data-step="2">Compensation</button>
+          <button class="step-tab" data-step="3">Employment</button>
+          <button class="step-tab" data-step="4">Policies</button>
+          <button class="step-tab" data-step="5">Review & Generate</button>
+        </nav>
+      </div>
 
-      <div class="field">
-        <label>Organization Name <span class="req">*</span></label>
-        <input type="text" id="orgName" value="OnEasy Consultants Private Limited" placeholder="Full registered company name"/>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Entity Type <span class="req">*</span></label>
-          <select id="entityType">
-            <option value="Company">Company</option>
-            <option value="Proprietorship">Proprietorship</option>
-            <option value="Partnership">Partnership</option>
-            <option value="LLP">LLP</option>
-            <option value="Firm">Firm</option>
-          </select>
+      <div class="form-card">
+        <!-- STEP 0: COMPANY -->
+        <div class="step-pane active" id="step-0">
+          <div class="step-title">Company Information</div>
+          <div class="step-desc">This appears on the letterhead and throughout the document.</div>
+
+          <div class="field">
+            <label>Organization Name <span class="req">*</span></label>
+            <input type="text" id="orgName" value="" placeholder="Full registered company name"/>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Entity Type <span class="req">*</span></label>
+              <select id="entityType">
+                <option value="Company">Company</option>
+                <option value="Proprietorship">Proprietorship</option>
+                <option value="Partnership">Partnership</option>
+                <option value="LLP">LLP</option>
+                <option value="Firm">Firm</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>CIN / Registration No.</label>
+              <input type="text" id="cin" value="" placeholder="e.g. U74999TG2021PTC154890"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Registered Office Address <span class="req">*</span></label>
+            <textarea id="officeAddress" rows="3" placeholder="Address as per registered business document..."></textarea>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Authorized Signatory Name <span class="req">*</span></label>
+              <input type="text" id="signatoryName" value="" placeholder="Name as per PAN"/>
+            </div>
+            <div class="field">
+              <label>Signatory Designation <span class="req">*</span></label>
+              <input type="text" id="signatoryDesig" value="" placeholder="e.g. Director"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>First-Aid Kit Location</label>
+            <input type="text" id="firstAid" value="HR Room" placeholder="e.g. HR Room, Reception"/>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-next" onclick="goTo(1)">Employee Details &rarr;</button>
+          </div>
         </div>
-        <div class="field">
-          <label>CIN / Registration No.</label>
-          <input type="text" id="cin" value="U74999TG2021PTC154890" placeholder="e.g. U74999TG2021PTC154890"/>
+
+        <!-- STEP 1: EMPLOYEE -->
+        <div class="step-pane" id="step-1">
+          <div class="step-title">Employee Information</div>
+          <div class="step-desc">Name must match PAN card. Address must match Aadhaar.</div>
+
+          <div class="row">
+            <div class="field">
+              <label>Salutation <span class="req">*</span></label>
+              <select id="salutation">
+                <option value="Mr.">Mr.</option>
+                <option value="Mrs.">Mrs.</option>
+                <option value="Ms.">Ms.</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Full Name <span class="req">*</span></label>
+              <input type="text" id="empFullName" placeholder="Full name as per PAN"/>
+              <div class="hint">Auto-populates throughout the entire document</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Complete Address <span class="req">*</span></label>
+            <textarea id="empAddress" rows="3" placeholder="Complete address as per Aadhaar card..."></textarea>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Designation / Job Title <span class="req">*</span></label>
+              <input type="text" id="designation" placeholder="e.g. Senior Software Engineer"/>
+              <div class="hint">Auto-populates throughout the entire document</div>
+            </div>
+            <div class="field">
+              <label>Reporting Manager's Designation</label>
+              <input type="text" id="reportingManager" placeholder="e.g. Engineering Manager"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Attendance System</label>
+            <select id="attendanceSystem">
+              <option value="biometric attendance system">Biometric</option>
+              <option value="digital attendance system">Digital</option>
+              <option value="manual attendance register">Manual Register</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-back" onclick="goTo(0)">&larr; Back</button>
+            <button class="btn btn-next" onclick="goTo(2)">Compensation &rarr;</button>
+          </div>
         </div>
-      </div>
-      <div class="field">
-        <label>Registered Office Address <span class="req">*</span></label>
-        <textarea id="officeAddress" rows="3" placeholder="Address as per registered business document…"></textarea>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Authorized Signatory Name <span class="req">*</span></label>
-          <input type="text" id="signatoryName" value="CA Abhishek Boddu" placeholder="Name as per PAN"/>
+
+        <!-- STEP 2: COMPENSATION -->
+        <div class="step-pane" id="step-2">
+          <div class="step-title">Compensation</div>
+          <div class="step-desc">Enter Annual CTC - salary breakdown (Annexure A) is auto-calculated.</div>
+
+          <div class="field">
+            <label>Annual CTC <span class="req">*</span></label>
+            <div class="prefix-wrap">
+              <span class="prefix">&#8377;</span>
+              <input type="number" id="annualCTC" placeholder="e.g. 600000" min="1"/>
+            </div>
+            <div class="salary-words" id="salaryWords"></div>
+          </div>
+
+          <div class="salary-box" id="salaryBox" style="display:none">
+            <h4>Auto-Calculated Salary Breakdown (Annexure A)</h4>
+            <table class="st">
+              <thead><tr><th>Description</th><th>Monthly (Rs.)</th><th>Annual (Rs.)</th></tr></thead>
+              <tbody id="salaryTbody"></tbody>
+            </table>
+            <div class="hint" style="margin-top:.6rem">Standard Indian payroll structure. Subject to statutory deductions.</div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-back" onclick="goTo(1)">&larr; Back</button>
+            <button class="btn btn-next" onclick="goTo(3)">Employment Terms &rarr;</button>
+          </div>
         </div>
-        <div class="field">
-          <label>Signatory Designation <span class="req">*</span></label>
-          <input type="text" id="signatoryDesig" value="Director" placeholder="e.g. Director"/>
+
+        <!-- STEP 3: EMPLOYMENT TERMS -->
+        <div class="step-pane" id="step-3">
+          <div class="step-title">Employment Terms</div>
+          <div class="step-desc">Dates, working hours, and probation - these appear in both letters.</div>
+
+          <div class="row">
+            <div class="field">
+              <label>Offer Letter Date <span class="req">*</span></label>
+              <input type="date" id="offerDate"/>
+            </div>
+            <div class="field">
+              <label>Offer Validity Date <span class="req">*</span></label>
+              <input type="date" id="offerValidity"/>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Date of Joining <span class="req">*</span></label>
+              <input type="date" id="joiningDate"/>
+            </div>
+            <div class="field">
+              <label>Probation Period <span class="req">*</span></label>
+              <select id="probationPeriod">
+                <option value="3 (three) months">3 months</option>
+                <option value="6 (six) months" selected>6 months</option>
+                <option value="12 (twelve) months">12 months</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Working Days <span class="req">*</span></label>
+            <div class="row" style="gap:.5rem;align-items:center">
+              <select id="workDayFrom">
+                <option value="Monday" selected>Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+              </select>
+              <span style="text-align:center;color:var(--text-muted);font-size:.85rem">to</span>
+              <select id="workDayTo">
+                <option value="Friday">Friday</option>
+                <option value="Saturday" selected>Saturday</option>
+                <option value="Sunday">Sunday</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row-3">
+            <div class="field">
+              <label>Work Start Time <span class="req">*</span></label>
+              <input type="time" id="workStart" value="10:30"/>
+            </div>
+            <div class="field">
+              <label>Work End Time <span class="req">*</span></label>
+              <input type="time" id="workEnd" value="19:30"/>
+            </div>
+            <div class="field">
+              <label>Break Duration <span class="req">*</span></label>
+              <input type="text" id="breakDuration" value="1 (one) hour" placeholder="e.g. 1 (one) hour"/>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-back" onclick="goTo(2)">&larr; Back</button>
+            <button class="btn btn-next" onclick="goTo(4)">Policies &rarr;</button>
+          </div>
         </div>
-      </div>
-      <div class="field">
-        <label>First-Aid Kit Location</label>
-        <input type="text" id="firstAid" value="HR Room" placeholder="e.g. HR Room, Reception"/>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-next" onclick="goTo(1)">Employee Details →</button>
+
+        <!-- STEP 4: POLICIES -->
+        <div class="step-pane" id="step-4">
+          <div class="step-title">Leave &amp; Termination Policies</div>
+          <div class="step-desc">Standard defaults are pre-filled - edit as needed for your company.</div>
+
+          <div class="row">
+            <div class="field">
+              <label>Monthly Leave Entitlement</label>
+              <input type="text" id="monthlyLeave" value="1.5 (one and a half) days"/>
+            </div>
+            <div class="field">
+              <label>Max Carry Forward Days</label>
+              <input type="text" id="carryForward" value="4 (four) days"/>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Employee Notice Period <span class="req">*</span></label>
+              <input type="text" id="noticePeriod" value="45 (Forty-Five) days"/>
+            </div>
+            <div class="field">
+              <label>Absconding Threshold</label>
+              <input type="text" id="abscondDays" value="3 (three) consecutive working days"/>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-back" onclick="goTo(3)">&larr; Back</button>
+            <button class="btn btn-next" onclick="goTo(5)">Review &amp; Generate &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STEP 5: REVIEW & GENERATE -->
+        <div class="step-pane" id="step-5">
+          <div class="step-title">Review &amp; Generate</div>
+          <div class="step-desc">Verify all fields before generating the DOCX file.</div>
+
+          <div class="alert error" id="alertError"></div>
+          <div class="alert success" id="alertSuccess"></div>
+
+          <div class="review-grid" id="reviewGrid"></div>
+
+          <div class="spinner-wrap" id="spinnerWrap">
+            <div class="spinner"></div>
+            <div class="gen-text" id="genText">Generating your document...</div>
+          </div>
+
+          <div class="btn-row" style="justify-content:center;margin-top:2rem">
+            <button class="btn btn-back" onclick="goTo(4)">&larr; Back</button>
+            <button class="btn btn-gen" id="generateBtn">Generate DOCX</button>
+          </div>
+        </div>
+
+      </div><!-- /form-card -->
+    </div><!-- /generatorPage -->
+
+    <!-- HISTORY PAGE -->
+    <div id="historyPage" class="history-page" style="display:none;">
+      <div class="history-container">
+        <div class="history-header">
+          <div>
+            <h2 class="history-title">All Offer Letters</h2>
+            <p class="history-subtitle">View and manage your previously generated offer letters.</p>
+          </div>
+          <button class="btn-refresh" id="refreshListBtn">Refresh</button>
+        </div>
+        <div class="history-grid" id="historyGrid"></div>
+        <div id="historyEmpty" class="history-empty" style="display:none;">
+          <h3>No offer letters yet</h3>
+          <p>Generate your first offer letter to see it here.</p>
+          <button class="btn btn-next" id="goToGeneratorBtn" style="margin-top:1.5rem; padding: 0.8rem 2rem;">Go to Generator &rarr;</button>
+        </div>
       </div>
     </div>
 
-    <!-- STEP 1: EMPLOYEE -->
-    <div class="step-pane" id="step-1">
-      <div class="step-title">👤 Employee Information</div>
-      <div class="step-desc">Name must match PAN card. Address must match Aadhaar.</div>
+  </div><!-- /content-area -->
+</div><!-- /app-shell -->
 
-      <div class="row">
-        <div class="field">
-          <label>Salutation <span class="req">*</span></label>
-          <select id="salutation">
-            <option value="Mr.">Mr.</option>
-            <option value="Mrs.">Mrs.</option>
-            <option value="Ms.">Ms.</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Full Name <span class="req">*</span></label>
-          <input type="text" id="empFullName" placeholder="Full name as per PAN"/>
-          <div class="hint">Auto-populates throughout the entire document</div>
-        </div>
-      </div>
-      <div class="field">
-        <label>Complete Address <span class="req">*</span></label>
-        <textarea id="empAddress" rows="3" placeholder="Complete address as per Aadhaar card…"></textarea>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Designation / Job Title <span class="req">*</span></label>
-          <input type="text" id="designation" placeholder="e.g. Senior Software Engineer"/>
-          <div class="hint">Auto-populates throughout the entire document</div>
-        </div>
-        <div class="field">
-          <label>Reporting Manager's Designation</label>
-          <input type="text" id="reportingManager" placeholder="e.g. Engineering Manager"/>
-        </div>
-      </div>
-      <div class="field">
-        <label>Attendance System</label>
-        <select id="attendanceSystem">
-          <option value="biometric attendance system">Biometric</option>
-          <option value="digital attendance system">Digital</option>
-          <option value="manual attendance register">Manual Register</option>
-        </select>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(0)">← Back</button>
-        <button class="btn btn-next" onclick="goTo(2)">Compensation →</button>
-      </div>
+<!-- ── DETAIL MODAL ── -->
+<div class="modal-backdrop" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">Offer Details</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
     </div>
-
-    <!-- STEP 2: COMPENSATION -->
-    <div class="step-pane" id="step-2">
-      <div class="step-title">💰 Compensation</div>
-      <div class="step-desc">Enter Annual CTC — salary breakdown (Annexure A) is auto-calculated.</div>
-
-      <div class="field">
-        <label>Annual CTC (₹) <span class="req">*</span></label>
-        <div class="prefix-wrap">
-          <span class="prefix">₹</span>
-          <input type="number" id="annualCTC" placeholder="e.g. 600000" min="1"/>
-        </div>
-        <div class="salary-words" id="salaryWords"></div>
-      </div>
-
-      <div class="salary-box" id="salaryBox" style="display:none">
-        <h4>📊 Auto-Calculated Salary Breakdown (Annexure A)</h4>
-        <table class="st">
-          <thead><tr><th>Component</th><th>Monthly (₹)</th><th>Annual (₹)</th></tr></thead>
-          <tbody id="salaryTbody"></tbody>
-        </table>
-        <div class="hint" style="margin-top:.6rem">Standard Indian payroll structure · Subject to statutory deductions</div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(1)">← Back</button>
-        <button class="btn btn-next" onclick="goTo(3)">Employment Terms →</button>
-      </div>
-    </div>
-
-    <!-- STEP 3: EMPLOYMENT TERMS -->
-    <div class="step-pane" id="step-3">
-      <div class="step-title">📋 Employment Terms</div>
-      <div class="step-desc">Dates, working hours, and probation — these appear in both letters.</div>
-
-      <div class="row">
-        <div class="field">
-          <label>Offer Letter Date <span class="req">*</span></label>
-          <input type="date" id="offerDate"/>
-        </div>
-        <div class="field">
-          <label>Offer Validity Date <span class="req">*</span></label>
-          <input type="date" id="offerValidity"/>
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Date of Joining <span class="req">*</span></label>
-          <input type="date" id="joiningDate"/>
-        </div>
-        <div class="field">
-          <label>Probation Period <span class="req">*</span></label>
-          <select id="probationPeriod">
-            <option value="3 (three) months">3 months</option>
-            <option value="6 (six) months" selected>6 months</option>
-            <option value="12 (twelve) months">12 months</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Working Days <span class="req">*</span></label>
-        <div class="row" style="gap:.5rem;align-items:center">
-          <select id="workDayFrom">
-            <option value="Monday" selected>Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-          </select>
-          <span style="text-align:center;color:var(--muted);font-size:.85rem">to</span>
-          <select id="workDayTo">
-            <option value="Friday">Friday</option>
-            <option value="Saturday" selected>Saturday</option>
-            <option value="Sunday">Sunday</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row-3">
-        <div class="field">
-          <label>Work Start Time <span class="req">*</span></label>
-          <input type="time" id="workStart" value="10:30"/>
-        </div>
-        <div class="field">
-          <label>Work End Time <span class="req">*</span></label>
-          <input type="time" id="workEnd" value="19:30"/>
-        </div>
-        <div class="field">
-          <label>Break Duration <span class="req">*</span></label>
-          <input type="text" id="breakDuration" value="1 (one) hour" placeholder="e.g. 1 (one) hour"/>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(2)">← Back</button>
-        <button class="btn btn-next" onclick="goTo(4)">Policies →</button>
-      </div>
-    </div>
-
-    <!-- STEP 4: POLICIES -->
-    <div class="step-pane" id="step-4">
-      <div class="step-title">📜 Leave &amp; Termination Policies</div>
-      <div class="step-desc">Standard defaults are pre-filled — edit as needed for your company.</div>
-
-      <div class="row">
-        <div class="field">
-          <label>Monthly Leave Entitlement</label>
-          <input type="text" id="monthlyLeave" value="1.5 (one and a half) days"/>
-        </div>
-        <div class="field">
-          <label>Max Carry Forward Days</label>
-          <input type="text" id="carryForward" value="4 (four) days"/>
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Employee Notice Period <span class="req">*</span></label>
-          <input type="text" id="noticePeriod" value="45 (Forty-Five) days"/>
-        </div>
-        <div class="field">
-          <label>Absconding Threshold</label>
-          <input type="text" id="abscondDays" value="3 (three) consecutive working days"/>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-back" onclick="goTo(3)">← Back</button>
-        <button class="btn btn-next" onclick="goTo(5)">Review &amp; Generate →</button>
-      </div>
-    </div>
-
-    <!-- STEP 5: REVIEW & GENERATE -->
-    <div class="step-pane" id="step-5">
-      <div class="step-title">✅ Review &amp; Generate</div>
-      <div class="step-desc">Verify all fields before generating the DOCX file.</div>
-
-      <div class="alert error" id="alertError"></div>
-      <div class="alert success" id="alertSuccess"></div>
-
-      <div class="review-grid" id="reviewGrid"></div>
-
-      <div class="spinner-wrap" id="spinnerWrap">
-        <div class="spinner"></div>
-        <div class="gen-text" id="genText">Generating your document…</div>
-      </div>
-
-      <div class="btn-row" style="justify-content:center;margin-top:2rem">
-        <button class="btn btn-back" onclick="goTo(4)">← Back</button>
-        <button class="btn btn-gen" id="generateBtn">⬇ Generate DOCX</button>
-      </div>
-    </div>
-
-  </div><!-- /form-card -->
-</div><!-- /main -->
-
-<!-- ── HISTORY PAGE ── -->
-<div id="historyPage" class="history-page" style="display:none;">
-  <div class="history-container">
-    <div class="history-header">
-      <div>
-        <h2 class="history-title">Generation History</h2>
-        <p class="history-subtitle">View and manage your previously generated offer letters.</p>
-      </div>
-      <button class="btn-refresh" id="refreshListBtn">🔄 Refresh List</button>
-    </div>
-    <div class="history-grid" id="historyGrid">
-      <!-- Cards rendered by JS -->
-    </div>
-    <div id="historyEmpty" class="history-empty" style="display:none;">
-      <div class="empty-icon">📄</div>
-      <h3>No offer letters yet</h3>
-      <p>Generate your first offer letter to see it here.</p>
-      <button class="btn btn-gen" id="goToGeneratorBtn" style="margin-top:1.5rem; padding: 0.8rem 2rem; font-size: 0.95rem;">Go to Generator →</button>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-back" id="modalDismiss">Close</button>
+      <button class="btn btn-next" id="modalRegenerate">Re-generate</button>
     </div>
   </div>
 </div>

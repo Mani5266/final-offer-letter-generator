@@ -97,31 +97,6 @@ app.delete('/api/offers/:id', simpleAuth, async (req, res) => {
   }
 });
 
-// ── CHAT PROXY (AI) ─────────────────────────────────────────────────────────
-
-app.post('/api/chat', simpleAuth, async (req, res) => {
-  const { message, context } = req.body;
-  const GEMINI_KEY = process.env.GEMINI_API_KEY;
-  if (!GEMINI_KEY) return res.status(500).json({ error: 'AI key missing' });
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: context + '\n\nUser: ' + message }] }],
-        })
-      }
-    );
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: 'AI failed' });
-  }
-});
-
 // Start server only in local dev (Vercel uses the exported app)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {

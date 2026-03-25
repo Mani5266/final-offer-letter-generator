@@ -77,9 +77,9 @@ function salaryTable(breakdown) {
   const rows = [
     new TableRow({
       children: [
-        hdrCell('Salary Component', col1),
-        hdrCell('Monthly (₹)', col2),
-        hdrCell('Annual (₹)', col3),
+        hdrCell('Description', col1),
+        hdrCell('Monthly (Rs. Per Month)', col2),
+        hdrCell('Annual (Rs. Per Annum)', col3),
       ],
     }),
   ];
