@@ -1,0 +1,14 @@
+# Test files
+test-gen.js
+test.docx
+
+# Database migration scripts (not needed at runtime)
+database/
+
+# Accidental file
+nul
+
+# Development files
+.git
+.gitignore
+README.md

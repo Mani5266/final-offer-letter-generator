@@ -1,5 +1,11 @@
 'use strict';
 
+// CANONICAL SOURCE for toWords(), formatINR(), and buildBreakdown().
+// Frontend copies exist in frontend/js/utils.js (toWords, fmtINR)
+// and frontend/js/salary.js (buildBreakdown). Keep in sync when modifying.
+
+const { SALARY_PERCENTAGES: SP } = require('./constants');
+
 function formatINR(n) {
   return new Intl.NumberFormat('en-IN').format(Math.round(n));
 }
@@ -37,15 +43,15 @@ function toWords(n) {
  */
 function buildBreakdown(ctc) {
   const monthly    = ctc / 12;
-  const basic      = Math.round(monthly * 0.50);
-  const hra        = Math.round(monthly * 0.188);
-  const convey     = Math.round(monthly * 0.047);
-  const medical    = Math.round(monthly * 0.0282);
-  const childEdu   = Math.round(monthly * 0.0094);
-  const childHost  = Math.round(monthly * 0.0094);
-  const special    = Math.round(monthly * 0.047);
-  const lta        = Math.round(monthly * 0.047);
-  const empPF      = Math.round(basic * 0.12);
+  const basic      = Math.round(monthly * SP.BASIC);
+  const hra        = Math.round(monthly * SP.HRA);
+  const convey     = Math.round(monthly * SP.CONVEYANCE);
+  const medical    = Math.round(monthly * SP.MEDICAL);
+  const childEdu   = Math.round(monthly * SP.CHILDREN_EDU);
+  const childHost  = Math.round(monthly * SP.CHILDREN_HOST);
+  const special    = Math.round(monthly * SP.SPECIAL);
+  const lta        = Math.round(monthly * SP.LTA);
+  const empPF      = Math.round(basic * SP.EMPLOYER_PF_OF_BASIC);
 
   // Differential is the balancing figure to ensure total = monthly CTC exactly
   const allocated  = basic + hra + convey + medical + childEdu + childHost + special + lta + empPF;
@@ -72,4 +78,53 @@ function buildBreakdown(ctc) {
   ];
 }
 
-module.exports = { formatINR, toWords, buildBreakdown };
+/**
+ * Converts an ISO date string (e.g. '2026-03-27') to a legal-friendly format.
+ * Output: '27th March 2026'
+ * Returns the original string unchanged if parsing fails.
+ */
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr + 'T00:00:00'); // force local midnight to avoid timezone shift
+  if (isNaN(d.getTime())) return isoStr;
+
+  const day = d.getDate();
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+
+  // Ordinal suffix
+  const suffix = (day % 10 === 1 && day !== 11) ? 'st'
+    : (day % 10 === 2 && day !== 12) ? 'nd'
+    : (day % 10 === 3 && day !== 13) ? 'rd'
+    : 'th';
+
+  return `${day}${suffix} ${month} ${year}`;
+}
+
+/**
+ * Converts a 24-hour time string (e.g. '19:30') to 12-hour format ('7:30 PM').
+ * If the input is already in 12h format (contains AM/PM) or is empty, returns as-is.
+ */
+function formatTime(timeStr) {
+  if (!timeStr) return '';
+  // Already in 12h format
+  if (/[AaPp][Mm]/.test(timeStr)) return timeStr;
+
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1].padStart(2, '0');
+  if (isNaN(hours)) return timeStr;
+
+  const period = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+
+  return `${hours}:${minutes} ${period}`;
+}
+
+module.exports = { formatINR, toWords, buildBreakdown, formatDate, formatTime };

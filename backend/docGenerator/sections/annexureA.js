@@ -2,14 +2,12 @@
 
 const { Paragraph, AlignmentType } = require('docx');
 
-function getAnnexureA(d, helpers, tables, constants, numberUtils) {
+function getAnnexureA(d, ctx) {
+  const { helpers, tables, numberUtils } = ctx;
   const { docTitle, body, run, blank, sigTable, pageBreak, salaryTable } = { ...helpers, ...tables };
   const { formatINR, toWords, buildBreakdown } = numberUtils;
-  
-  const ctc       = parseInt(d.annualCTC) || 0;
-  const ctcWords  = toWords(ctc);
-  const breakdown = buildBreakdown(ctc);
-  const orgName   = d.orgName || '';
+
+  const { ctc, ctcWords, breakdown, orgName } = ctx;
 
   return [
     pageBreak(),

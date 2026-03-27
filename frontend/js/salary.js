@@ -1,6 +1,22 @@
 // ── SALARY ────────────────────────────────────────────────────────────────────
 import { toWords, fmtINR } from './utils.js';
 
+// NOTE: buildBreakdown() is duplicated in backend/docGenerator/numberUtils.js.
+// The backend copy is the canonical source. Keep both in sync when modifying.
+
+// Salary percentage constants — must match backend/docGenerator/constants.js SALARY_PERCENTAGES
+const SP = {
+  BASIC:                0.50,
+  HRA:                  0.188,
+  CONVEYANCE:           0.047,
+  MEDICAL:              0.0282,
+  CHILDREN_EDU:         0.0094,
+  CHILDREN_HOST:        0.0094,
+  SPECIAL:              0.047,
+  LTA:                  0.047,
+  EMPLOYER_PF_OF_BASIC: 0.12,
+};
+
 /**
  * Builds salary breakdown matching the standard Indian CTC structure.
  * CTC = Total of all components including Employer's PF contribution.
@@ -19,15 +35,15 @@ import { toWords, fmtINR } from './utils.js';
  */
 function buildBreakdown(ctc) {
   const monthly    = ctc / 12;
-  const basic      = Math.round(monthly * 0.50);
-  const hra        = Math.round(monthly * 0.188);
-  const convey     = Math.round(monthly * 0.047);
-  const medical    = Math.round(monthly * 0.0282);
-  const childEdu   = Math.round(monthly * 0.0094);
-  const childHost  = Math.round(monthly * 0.0094);
-  const special    = Math.round(monthly * 0.047);
-  const lta        = Math.round(monthly * 0.047);
-  const empPF      = Math.round(basic * 0.12);
+  const basic      = Math.round(monthly * SP.BASIC);
+  const hra        = Math.round(monthly * SP.HRA);
+  const convey     = Math.round(monthly * SP.CONVEYANCE);
+  const medical    = Math.round(monthly * SP.MEDICAL);
+  const childEdu   = Math.round(monthly * SP.CHILDREN_EDU);
+  const childHost  = Math.round(monthly * SP.CHILDREN_HOST);
+  const special    = Math.round(monthly * SP.SPECIAL);
+  const lta        = Math.round(monthly * SP.LTA);
+  const empPF      = Math.round(basic * SP.EMPLOYER_PF_OF_BASIC);
 
   // Differential is the balancing figure to ensure total = monthly CTC exactly
   const allocated  = basic + hra + convey + medical + childEdu + childHost + special + lta + empPF;
@@ -60,7 +76,7 @@ function onCTCChange() {
   const box     = document.getElementById('salaryBox');
   if (!ctc) {
     if (wordsEl) wordsEl.textContent = '';
-    if (box) box.style.display = 'none';
+    if (box) box.classList.add('hidden');
     return;
   }
   if (wordsEl) wordsEl.textContent = 'INR ' + toWords(ctc) + ' Only';
@@ -72,7 +88,7 @@ function onCTCChange() {
       return `<tr${cls}><td>${r.label}</td><td>${fmtINR(r.monthly)}</td><td>${fmtINR(r.annual)}</td></tr>`;
     }).join('');
   }
-  if (box) box.style.display = 'block';
+  if (box) box.classList.remove('hidden');
 }
 
 export { buildBreakdown, onCTCChange };

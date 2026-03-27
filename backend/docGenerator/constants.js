@@ -37,7 +37,21 @@ const NUMBERING = {
   ],
 };
 
+// ─── SALARY BREAKDOWN PERCENTAGES ────────────────────────────────────────────
+// Allocation as fraction of monthly CTC (except PF which is fraction of Basic)
+const SALARY_PERCENTAGES = {
+  BASIC:          0.50,
+  HRA:            0.188,
+  CONVEYANCE:     0.047,
+  MEDICAL:        0.0282,
+  CHILDREN_EDU:   0.0094,
+  CHILDREN_HOST:  0.0094,
+  SPECIAL:        0.047,
+  LTA:            0.047,
+  EMPLOYER_PF_OF_BASIC: 0.12,
+};
+
 module.exports = {
   PAGE_W, PAGE_H, MAR_TOP, MAR_BOT, MAR_LEFT, MAR_RIGHT, CONTENT_W,
-  C, NUMBERING
+  C, NUMBERING, SALARY_PERCENTAGES
 };

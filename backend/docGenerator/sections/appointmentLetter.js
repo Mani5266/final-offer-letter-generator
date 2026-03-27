@@ -2,25 +2,20 @@
 
 const { Paragraph, AlignmentType } = require('docx');
 
-function getAppointmentLetter(d, helpers, tables, constants, numberUtils) {
+function getAppointmentLetter(d, ctx) {
+  const { helpers, tables, numberUtils } = ctx;
   const { docTitle, labelValue, body, p, run, blank, sigTable, pageBreak, clauseHead, subClause } = { ...helpers, ...tables };
-  const { formatINR, toWords } = numberUtils;
-  
-  const year      = new Date().getFullYear();
-  const ctc       = parseInt(d.annualCTC) || 0;
-  const ctcWords  = toWords(ctc);
-  const firstName = (d.empFullName || '').split(' ')[0];
-  const salute    = d.salutation || 'Mr.';
-  const orgName   = d.orgName || '';
-  const workDays  = `${d.workDayFrom || 'Monday'} to ${d.workDayTo || 'Saturday'}`;
-  const workTime  = `${d.workStart || '10:30 AM'} to ${d.workEnd || '7:30 PM'} IST`;
+  const { formatINR, toWords, formatDate, formatTime } = numberUtils;
+
+  const { year, ctc, ctcWords, firstName, salute, orgName, workDays, workTime,
+          monthlyLeaveNum, annualLeave } = ctx;
 
   return [
     pageBreak(),
     docTitle('APPOINTMENT LETTER'),
 
     labelValue('Ref No.: ', `OE/HR/AL/[Serial No.]/${year}`),
-    labelValue('Date: ', d.offerDate, { after: 200 }),
+    labelValue('Date: ', formatDate(d.offerDate), { after: 200 }),
 
     body('To,'),
     p(run(d.empFullName, { bold: true, size: 11 }), { before: 40, after: 40 }),
@@ -41,7 +36,7 @@ function getAppointmentLetter(d, helpers, tables, constants, numberUtils) {
     clauseHead(1, 'COMMENCEMENT OF EMPLOYMENT'),
     subClause('1.1', [
       run('Your employment with the Company shall commence from ', { size: 11 }),
-      run(d.joiningDate, { bold: true, size: 11 }),
+      run(formatDate(d.joiningDate), { bold: true, size: 11 }),
       run(' ("Date of Joining").', { size: 11 }),
     ]),
     subClause('1.2', [
@@ -107,7 +102,7 @@ function getAppointmentLetter(d, helpers, tables, constants, numberUtils) {
       run('You shall be entitled to ', { size: 11 }),
       run(d.monthlyLeave || '1.5 (one and a half) days', { bold: true, size: 11 }),
       run(' of leave per calendar month, totaling ', { size: 11 }),
-      run('18 days per financial year', { bold: true, size: 11 }),
+      run(`${annualLeave} days per financial year`, { bold: true, size: 11 }),
       run(' (April to March).', { size: 11 }),
     ]),
     subClause('6.2', [
@@ -195,7 +190,7 @@ function getAppointmentLetter(d, helpers, tables, constants, numberUtils) {
     body(''),
     body('________________________________'),
     body(d.signatoryName || '', { bold: true }),
-    body(d.signatoryDesignation || ''),
+    body(d.signatoryDesig || ''),
 
     ...blank(2),
     new Paragraph({

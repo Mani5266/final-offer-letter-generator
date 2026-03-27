@@ -1,14 +1,21 @@
 'use strict';
 
-const { Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, AlignmentType } = require('docx');
+const { Table, TableRow, TableCell, Paragraph, WidthType, BorderStyle, ShadingType, AlignmentType } = require('docx');
 const { CONTENT_W, C } = require('./constants');
 const { noBorders, allBorders, run } = require('./helpers');
 const { formatINR } = require('./numberUtils');
 
 // ─── SIGNATURE TABLE (2-column, no borders, matches template) ────────────────
+
+/**
+ * Create a two-column signature table with no visible borders.
+ * Each column contains vertically stacked text lines.
+ * @param {string[]} leftLines - Lines for the left column (e.g. signatory info)
+ * @param {string[]} rightLines - Lines for the right column (e.g. date/place)
+ * @returns {Table} docx Table instance
+ */
 function sigTable(leftLines, rightLines) {
   function col(lines, w) {
-    const { Paragraph } = require('docx');
     return new TableCell({
       borders: noBorders(),
       width: { size: w, type: WidthType.DXA },
@@ -28,13 +35,23 @@ function sigTable(leftLines, rightLines) {
 }
 
 // ─── SALARY TABLE ────────────────────────────────────────────────────────────
+
+/**
+ * Create a formatted salary breakdown table with header row and data rows.
+ * Columns: Description | Monthly | Annual. Total rows get grey background.
+ * @param {Object[]} breakdown - Array of salary line items from buildBreakdown()
+ * @param {string} breakdown[].label - Row description (e.g. "Basic Salary")
+ * @param {number} breakdown[].monthly - Monthly amount
+ * @param {number} breakdown[].annual - Annual amount
+ * @param {string} [breakdown[].type] - "total" for highlighted total rows
+ * @returns {Table} docx Table instance
+ */
 function salaryTable(breakdown) {
   const col1 = Math.floor(CONTENT_W * 0.5);
   const col2 = Math.floor(CONTENT_W * 0.25);
   const col3 = CONTENT_W - col1 - col2;
 
   function hdrCell(text, w) {
-    const { Paragraph } = require('docx');
     return new TableCell({
       borders: allBorders('auto', 4),
       shading: { fill: '1F3864', type: ShadingType.CLEAR },
@@ -48,7 +65,6 @@ function salaryTable(breakdown) {
   }
 
   function dataCell(text, w, bold = false, bg = C.WHITE) {
-    const { Paragraph } = require('docx');
     return new TableCell({
       borders: allBorders('auto', 4),
       shading: { fill: bg, type: ShadingType.CLEAR },
@@ -62,7 +78,6 @@ function salaryTable(breakdown) {
   }
 
   function labelCell(text, w, bold = false, bg = C.WHITE) {
-    const { Paragraph } = require('docx');
     return new TableCell({
       borders: allBorders('auto', 4),
       shading: { fill: bg, type: ShadingType.CLEAR },

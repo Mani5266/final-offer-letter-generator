@@ -2,24 +2,18 @@
 
 const { Paragraph, AlignmentType } = require('docx');
 
-function getOfferLetter(d, helpers, tables, constants, numberUtils) {
+function getOfferLetter(d, ctx) {
+  const { helpers, tables, numberUtils } = ctx;
   const { docTitle, labelValue, body, p, run, blank, sigTable } = { ...helpers, ...tables };
-  const { formatINR, toWords } = numberUtils;
-  
-  const year      = new Date().getFullYear();
-  const ctc       = parseInt(d.annualCTC) || 0;
-  const ctcWords  = toWords(ctc);
-  const firstName = (d.empFullName || '').split(' ')[0];
-  const salute    = d.salutation || 'Mr.';
-  const orgName   = d.orgName || '';
-  const workDays  = `${d.workDayFrom || 'Monday'} to ${d.workDayTo || 'Saturday'}`;
-  const workTime  = `${d.workStart || '10:30 AM'} to ${d.workEnd || '7:30 PM'} IST`;
+  const { formatINR, toWords, formatDate, formatTime } = numberUtils;
+
+  const { year, ctc, ctcWords, firstName, salute, orgName, workDays, workTime } = ctx;
 
   return [
     docTitle('OFFER LETTER'),
 
     labelValue('Ref No.: ', `OE/HR/OL/[Serial No.]/${year}`),
-    labelValue('Date: ', d.offerDate, { after: 200 }),
+    labelValue('Date: ', formatDate(d.offerDate), { after: 200 }),
 
     body('To,'),
     p(run(d.empFullName, { bold: true, size: 11 }), { before: 40, after: 40 }),
@@ -53,7 +47,7 @@ function getOfferLetter(d, helpers, tables, constants, numberUtils) {
     helpers.clauseHead(3, 'Date of Joining'),
     body([
       run('Your proposed date of joining is ', { size: 11 }),
-      run(d.joiningDate, { bold: true, size: 11 }),
+      run(formatDate(d.joiningDate), { bold: true, size: 11 }),
       run(`. Please report to our office at `, { size: 11 }),
       run(d.officeAddress || '[Office Address]', { size: 11 }),
       run(' by ', { size: 11 }),
@@ -77,7 +71,7 @@ function getOfferLetter(d, helpers, tables, constants, numberUtils) {
     helpers.clauseHead(5, 'Validity of Offer'),
     body([
       run('This offer is valid until ', { size: 11 }),
-      run(d.offerValidity, { bold: true, size: 11 }),
+      run(formatDate(d.offerValidity), { bold: true, size: 11 }),
       run('. If we do not receive your acceptance by this date, the offer shall stand automatically withdrawn.', { size: 11 }),
     ], { indent: 360 }),
 
@@ -112,7 +106,7 @@ function getOfferLetter(d, helpers, tables, constants, numberUtils) {
     body(''),
     body('________________________________'),
     body(d.signatoryName || '', { bold: true }),
-    body(d.signatoryDesignation || ''),
+    body(d.signatoryDesig || ''),
 
     ...blank(2),
     new Paragraph({
@@ -127,7 +121,7 @@ function getOfferLetter(d, helpers, tables, constants, numberUtils) {
       run(`, hereby accept the offer of employment as `, { size: 11 }),
       run(d.designation, { bold: true, size: 11 }),
       run(` at ${orgName} on the terms and conditions mentioned above. I confirm that I will join on `, { size: 11 }),
-      run(d.joiningDate, { bold: true, size: 11 }),
+      run(formatDate(d.joiningDate), { bold: true, size: 11 }),
       run(' and will submit all required documents on the date of joining.', { size: 11 }),
     ], { before: 80, after: 200 }),
 

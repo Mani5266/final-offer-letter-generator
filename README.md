@@ -76,8 +76,8 @@ cp backend/.env.example backend/.env
 Edit `backend/.env` and fill in:
 ```env
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_KEY=your-service-role-key
-GEMINI_API_KEY=your-gemini-api-key        # optional
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 ### 3. Set up the database

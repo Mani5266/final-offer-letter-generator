@@ -1,4 +1,8 @@
 // ── UTILS ─────────────────────────────────────────────────────────────────────
+
+// NOTE: toWords() and fmtINR() are duplicated in backend/docGenerator/numberUtils.js.
+// The backend copy is the canonical source. Keep both in sync when modifying.
+
 const ONES = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
 const TENS = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
 
@@ -31,15 +35,54 @@ function fmtTime(t) {
 }
 
 function showAlert(type, msg) {
-  ['alertError','alertSuccess'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.style.display = 'none'; el.textContent = ''; }
-  });
-  const el = document.getElementById(type === 'error' ? 'alertError' : 'alertSuccess');
-  if (el) {
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type === 'error' ? 'error' : 'success'}`;
+  toast.setAttribute('role', 'alert');
+
+  const text = document.createElement('span');
+  text.textContent = msg;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'toast-close';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.setAttribute('aria-label', 'Dismiss notification');
+  closeBtn.onclick = () => dismissToast(toast);
+
+  toast.appendChild(text);
+  toast.appendChild(closeBtn);
+  container.appendChild(toast);
+
+  // Auto-dismiss after 5 seconds (errors stay 7 seconds)
+  const duration = type === 'error' ? 7000 : 5000;
+  toast._dismissTimer = setTimeout(() => dismissToast(toast), duration);
 }
 
-export { toWords, fmtINR, v, fmtDate, fmtTime, showAlert };
+function dismissToast(toast) {
+  if (toast._dismissed) return;
+  toast._dismissed = true;
+  clearTimeout(toast._dismissTimer);
+  toast.classList.add('removing');
+  toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  // Fallback removal in case animationend doesn't fire
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 300);
+}
+
+/**
+ * Escape HTML special characters to prevent XSS when inserting user data via innerHTML.
+ * @param {string} str - Untrusted string to escape
+ * @returns {string} HTML-safe string
+ */
+function escapeHTML(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export { toWords, fmtINR, v, fmtDate, fmtTime, showAlert, escapeHTML };

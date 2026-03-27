@@ -14,12 +14,48 @@ const { getAnnexureA }         = require('./sections/annexureA');
 const { getAnnexureB }         = require('./sections/annexureB');
 
 /**
+ * Build a shared context object from form data.
+ * Pre-computes values that are reused across multiple sections so each
+ * section doesn't need to derive them independently.
+ * @param {Object} d - Raw form data from the frontend
+ * @returns {Object} ctx - Pre-computed context
+ */
+function buildContext(d) {
+  const { formatINR, toWords, buildBreakdown, formatDate, formatTime } = numberUtils;
+
+  const year      = new Date().getFullYear();
+  const ctc       = parseInt(d.annualCTC) || 0;
+  const ctcWords  = toWords(ctc);
+  const breakdown = buildBreakdown(ctc);
+  const firstName = (d.empFullName || '').split(' ')[0];
+  const salute    = d.salutation || 'Mr.';
+  const orgName   = d.orgName || '';
+  const workDays  = `${d.workDayFrom || 'Monday'} to ${d.workDayTo || 'Saturday'}`;
+  const workTime  = `${formatTime(d.workStart) || '10:30 AM'} to ${formatTime(d.workEnd) || '7:30 PM'} IST`;
+
+  // Calculate annual leave from monthly leave
+  const monthlyLeaveNum = parseFloat(d.monthlyLeave) || 1.5;
+  const annualLeave     = Math.round(monthlyLeaveNum * 12);
+
+  return {
+    year, ctc, ctcWords, breakdown, firstName, salute, orgName,
+    workDays, workTime, monthlyLeaveNum, annualLeave,
+    // Pass through utility modules so sections can use them
+    helpers, tables, constants, numberUtils,
+    // Shorthand access to commonly used helpers
+    formatINR, toWords, formatDate, formatTime,
+  };
+}
+
+/**
  * Main function to generate the complete Offer and Appointment Letter document.
  * @param {Object} d - Form data from the frontend
  * @returns {Promise<Buffer>} - The generated Word document as a buffer
  */
 async function generateDoc(d) {
-  const { PAGE_W, PAGE_H, MAR_TOP, MAR_RIGHT, MAR_BOT, MAR_LEFT, NUMBERING, C } = constants;
+  const { PAGE_W, PAGE_H, MAR_TOP, MAR_RIGHT, MAR_BOT, MAR_LEFT, NUMBERING } = constants;
+
+  const ctx = buildContext(d);
 
   const pageProps = {
     page: {
@@ -31,11 +67,11 @@ async function generateDoc(d) {
   const header = makeHeader(d.orgName || '', d.cin || '');
   const footer = makeFooter();
 
-  // Assemble all sections
-  const offerLetter       = getOfferLetter(d, helpers, tables, constants, numberUtils);
-  const appointmentLetter = getAppointmentLetter(d, helpers, tables, constants, numberUtils);
-  const annexureA         = getAnnexureA(d, helpers, tables, constants, numberUtils);
-  const annexureB         = getAnnexureB(d, helpers, tables, constants, numberUtils);
+  // Assemble all sections — pass raw data (d) and pre-computed context (ctx)
+  const offerLetter       = getOfferLetter(d, ctx);
+  const appointmentLetter = getAppointmentLetter(d, ctx);
+  const annexureA         = getAnnexureA(d, ctx);
+  const annexureB         = getAnnexureB(d, ctx);
 
   const doc = new Document({
     numbering: NUMBERING,

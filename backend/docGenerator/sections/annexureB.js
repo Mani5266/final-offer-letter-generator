@@ -2,11 +2,12 @@
 
 const { Paragraph, AlignmentType } = require('docx');
 
-function getAnnexureB(d, helpers, tables, constants, numberUtils) {
+function getAnnexureB(d, ctx) {
+  const { helpers, tables, numberUtils } = ctx;
   const { docTitle, body, run, blank, sigTable, pageBreak } = { ...helpers, ...tables };
-  const orgName   = d.orgName || '';
-  const workDays  = `${d.workDayFrom || 'Monday'} to ${d.workDayTo || 'Saturday'}`;
-  const workTime  = `${d.workStart || '10:30 AM'} to ${d.workEnd || '7:30 PM'} IST`;
+  const { formatTime } = numberUtils;
+
+  const { orgName, workDays, workTime, monthlyLeaveNum, annualLeave } = ctx;
 
   function annexBHead(num, title) {
     return new Paragraph({
@@ -35,7 +36,7 @@ function getAnnexureB(d, helpers, tables, constants, numberUtils) {
 
     // 2. Leave
     annexBHead(2, 'LEAVE POLICY'),
-    body([run('Leave Entitlement: ', { bold: true, size: 11 }), run(`Every employee is entitled to ${d.monthlyLeave || '1.5 (one and a half) days'} of leave per calendar month, totaling 18 days per financial year.`, { size: 11 })], { indent: 360, before: 40, after: 40 }),
+    body([run('Leave Entitlement: ', { bold: true, size: 11 }), run(`Every employee is entitled to ${d.monthlyLeave || '1.5 (one and a half) days'} of leave per calendar month, totaling ${annualLeave} days per financial year.`, { size: 11 })], { indent: 360, before: 40, after: 40 }),
     body([run('Financial Year: ', { bold: true, size: 11 }), run('The financial year for leave calculation starts from April 1st and ends on March 31st.', { size: 11 })], { indent: 360, before: 40, after: 40 }),
     body([run('Leave Carry Forward: ', { bold: true, size: 11 }), run(`A maximum of ${d.carryForward || '4 (four) days'} of unutilized leave can be carried forward to the next financial year. Any balance exceeding this shall automatically lapse on March 31st.`, { size: 11 })], { indent: 360, before: 40, after: 40 }),
     body([run('No Leave Encashment: ', { bold: true, size: 11 }), run('There is no provision for encashment or monetary compensation for unutilized or lapsed leaves.', { size: 11 })], { indent: 360, before: 40, after: 40 }),
@@ -99,7 +100,7 @@ function getAnnexureB(d, helpers, tables, constants, numberUtils) {
 
     // 14. Safety
     annexBHead(14, 'SAFETY AND HEALTH'),
-    body([run('The Company strives to provide a safe work environment. A first-aid kit is available at ', { size: 11 }), run(d.firstAidLocation || '[HR Room]', { bold: true, size: 11 }), run(' for employee convenience.', { size: 11 })], { indent: 360, before: 40, after: 40 }),
+    body([run('The Company strives to provide a safe work environment. A first-aid kit is available at ', { size: 11 }), run(d.firstAid || '[HR Room]', { bold: true, size: 11 }), run(' for employee convenience.', { size: 11 })], { indent: 360, before: 40, after: 40 }),
 
     // 15. Open Door
     annexBHead(15, 'OPEN DOOR POLICY'),
