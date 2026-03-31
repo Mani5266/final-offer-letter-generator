@@ -6,8 +6,6 @@ const helmet = require('helmet');
 const { generateDoc } = require('./docGenerator/index');
 const { supabaseAdmin } = require('./utils/supabase');
 const { validateGeneratePayload } = require('./validation');
-const { logAudit } = require('./utils/audit');
-const { verifyAuth } = require('./middleware/auth');
 const log = require('./utils/logger');
 const { corsOptions } = require('./config/cors');
 const { generalLimiter, generateLimiter } = require('./config/rateLimit');
@@ -43,8 +41,8 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
       connectSrc: [
         "'self'",
-        "https://jccvqxsobciorrniqlod.supabase.co",
-        "wss://jccvqxsobciorrniqlod.supabase.co",
+        "https://kihkewnaokmimfxceqox.supabase.co",
+        "wss://kihkewnaokmimfxceqox.supabase.co",
       ],
       imgSrc: ["'self'", "data:", "blob:"],
       objectSrc: ["'none'"],
@@ -92,7 +90,7 @@ app.use(express.static(path.join(__dirname, '../frontend'), {
 
 // ── DOCUMENT GENERATION ──────────────────────────────────────────────────────
 
-app.post('/generate', generateLimiter, verifyAuth, async (req, res) => {
+app.post('/generate', generateLimiter, async (req, res) => {
   try {
     // Step 3: Validate input
     const validation = validateGeneratePayload(req.body);
@@ -110,55 +108,29 @@ app.post('/generate', generateLimiter, verifyAuth, async (req, res) => {
     const filename = `Offer_${empName}.docx`;
 
     // Upload the generated DOCX to Supabase Storage
-    const userId = req.user.id;
-    const offerId = validatedData._offerId || 'unknown'; // Validated UUID from Zod schema
-    const storagePath = `${userId}/${offerId}/${filename}`;
+    const offerId = validatedData._offerId || 'unknown';
+    const storagePath = `offers/${offerId}/${filename}`;
     let doc_url = null;
 
     try {
-      // Security: Verify the offer belongs to the authenticated user before uploading.
-      // This prevents a malicious user from passing someone else's offerId to overwrite their docs.
-      let ownershipVerified = false;
-      if (offerId && offerId !== 'unknown') {
-        const { data: offerRow, error: lookupErr } = await supabaseAdmin
-          .from('offers')
-          .select('id')
-          .eq('id', offerId)
-          .eq('user_id', userId)
-          .single();
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('offer-docs')
+        .upload(storagePath, buffer, {
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          upsert: true,
+        });
 
-        if (lookupErr || !offerRow) {
-          log.warn('Ownership check failed', { reqId: req.id, offerId, userId });
-          // Skip upload but still return the generated document to the client
-        } else {
-          ownershipVerified = true;
-        }
+      if (uploadError) {
+        log.error('Storage upload failed', { reqId: req.id, error: uploadError.message });
       } else {
-        // No offerId provided — allow upload under 'unknown' folder (backward compat)
-        ownershipVerified = true;
-      }
+        doc_url = storagePath;
 
-      if (ownershipVerified) {
-        const { error: uploadError } = await supabaseAdmin.storage
-          .from('offer-docs')
-          .upload(storagePath, buffer, {
-            contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            upsert: true,
-          });
-
-        if (uploadError) {
-          log.error('Storage upload failed', { reqId: req.id, error: uploadError.message });
-        } else {
-          doc_url = storagePath;
-
-          // Update the offer record with doc_url if offerId is available
-          if (offerId && offerId !== 'unknown') {
-            await supabaseAdmin
-              .from('offers')
-              .update({ doc_url: storagePath })
-              .eq('id', offerId)
-              .eq('user_id', userId);
-          }
+        // Update the offer record with doc_url if offerId is available
+        if (offerId && offerId !== 'unknown') {
+          await supabaseAdmin
+            .from('offers')
+            .update({ doc_url: storagePath })
+            .eq('id', offerId);
         }
       }
     } catch (storageErr) {
@@ -169,14 +141,6 @@ app.post('/generate', generateLimiter, verifyAuth, async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
-
-    // Step 7: Audit log (fire-and-forget, don't block response)
-    logAudit({
-      user_id: req.user.id,
-      action: 'generate_document',
-      resource_type: 'offer_letter',
-      details: { emp_name: empName, designation: validatedData.designation || '', doc_url: doc_url || '' },
-    }).catch(err => log.error('Audit log failed', { reqId: req.id, error: err.message }));
 
   } catch (err) {
     log.error('DocGen Error', { reqId: req.id, error: err.message, stack: err.stack });

@@ -18,10 +18,6 @@ jest.mock('../utils/supabase', () => ({
   },
 }));
 
-jest.mock('../utils/audit', () => ({
-  logAudit: jest.fn().mockResolvedValue(undefined),
-}));
-
 jest.mock('../utils/logger', () => ({
   debug: jest.fn(),
   info: jest.fn(),

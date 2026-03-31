@@ -1,111 +1,22 @@
-import { API_URL } from './config.js';
+import { API_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { v, fmtDate, fmtTime, showAlert, toWords, fmtINR, escapeHTML } from './utils.js';
 import { onCTCChange } from './salary.js';
-import { login, signup, logout, checkSession, getAccessToken, onAuthStateChange, supabase } from './auth.js';
+
+// Initialize Supabase Client (no auth needed)
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentStep = 0;
-let currentUser = null;
 let currentPage = 'generator'; // 'generator' or 'history'
 
-// ── AUTH INTEGRATION ──
-function initAuth() {
-  const loginTab = document.getElementById('loginTab');
-  const signupTab = document.getElementById('signupTab');
-  const loginForm = document.getElementById('loginForm');
-  const signupForm = document.getElementById('signupForm');
-  const authError = document.getElementById('authError');
-
-  loginTab.onclick = () => {
-    loginTab.classList.add('active');
-    loginTab.setAttribute('aria-selected', 'true');
-    signupTab.classList.remove('active');
-    signupTab.setAttribute('aria-selected', 'false');
-    loginForm.classList.remove('hidden');
-    signupForm.classList.add('hidden');
-    authError.classList.add('hidden');
-  };
-
-  signupTab.onclick = () => {
-    signupTab.classList.add('active');
-    signupTab.setAttribute('aria-selected', 'true');
-    loginTab.classList.remove('active');
-    loginTab.setAttribute('aria-selected', 'false');
-    signupForm.classList.remove('hidden');
-    loginForm.classList.add('hidden');
-    authError.classList.add('hidden');
-  };
-
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('loginSubmit');
-    btn.disabled = true;
-    btn.textContent = 'Signing in…';
-    try {
-      const user = await login(v('loginEmail'), v('loginPass'));
-      if (user) handleAuthSuccess(user);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-    }
-  });
-
-  signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    // Confirm password match
-    if (v('signupPass') !== v('signupPassConfirm')) {
-      const errEl = document.getElementById('authError');
-      if (errEl) { errEl.textContent = 'Passwords do not match'; errEl.classList.remove('hidden'); }
-      return;
-    }
-    const btn = document.getElementById('signupSubmit');
-    btn.disabled = true;
-    btn.textContent = 'Creating account…';
-    try {
-      const data = await signup(v('signupEmail'), v('signupPass'), v('signupName'));
-      if (data) {
-        showAlert('success', 'Signup successful! Please check your email and then login.');
-        loginTab.click();
-      }
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Create Account';
-    }
-  });
-
-  document.getElementById('logoutBtn').onclick = logout;
-}
-
-function handleAuthSuccess(user) {
-  currentUser = user;
-  document.getElementById('authOverlay').classList.add('hidden');
-  document.getElementById('appShell').classList.remove('hidden');
-
-  // Set user email in sidebar
-  const emailDisplay = document.getElementById('userEmailDisplay');
-  const email = user.email || user.user_metadata?.full_name || '';
-  if (emailDisplay) emailDisplay.textContent = email;
-
-  // Set avatar initial
-  const avatar = document.getElementById('userAvatar');
-  if (avatar && email) avatar.textContent = email.charAt(0).toUpperCase();
-
-  loadDraft();
-  fetchSidebarDrafts();
-}
-
-async function getAuthHeaders() {
-  const token = await getAccessToken();
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
+function getAuthHeaders() {
+  return { 'Content-Type': 'application/json' };
 }
 
 // ── SUPABASE CRUD HELPERS ──
 async function dbInsertOffer({ emp_name, designation, annual_ctc, payload }) {
   const { data, error } = await supabase
     .from('offers')
-    .insert({ user_id: currentUser.id, emp_name, designation, annual_ctc, payload })
+    .insert({ emp_name, designation, annual_ctc, payload })
     .select()
     .single();
   if (error) throw error;
@@ -441,19 +352,17 @@ let currentOfferId = null;
 
 function saveDraft() {
   const draft = { currentStep, currentOfferId, data: {} };
-  // Only collect form-card inputs — excludes auth fields (loginPass, signupPass, etc.)
+  // Only collect form-card inputs
   document.querySelectorAll('.form-card input, .form-card select, .form-card textarea').forEach(el => {
     if (el.id) draft.data[el.id] = el.value;
   });
   // Persist company logo (base64)
   if (_companyLogoBase64) draft.companyLogo = _companyLogoBase64;
-  const key = currentUser ? `oneasy_draft_${currentUser.id}` : 'oneasy_draft';
-  localStorage.setItem(key, JSON.stringify(draft));
+  localStorage.setItem('oneasy_draft', JSON.stringify(draft));
 }
 
 function loadDraft() {
-  const key = currentUser ? `oneasy_draft_${currentUser.id}` : 'oneasy_draft';
-  const saved = localStorage.getItem(key);
+  const saved = localStorage.getItem('oneasy_draft');
   if (!saved) return;
   try {
     const parsed = JSON.parse(saved);
@@ -1039,7 +948,7 @@ function numberToWords(n) {
 
 function getPayload() {
   const p = {};
-  // Only collect form-card inputs — excludes auth fields (loginPass, signupPass, etc.)
+  // Collect form-card inputs
   document.querySelectorAll('.form-card input, .form-card select, .form-card textarea').forEach(el => {
     if (el.id) p[el.id] = el.value;
   });
@@ -1091,7 +1000,7 @@ async function generate() {
     const generatePayload = { ...payload, _offerId: currentOfferId };
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: await getAuthHeaders(),
+      headers: getAuthHeaders(),
       body: JSON.stringify(generatePayload)
     });
     if (!res.ok) {
@@ -1171,23 +1080,9 @@ function closeModal() {
 }
 
 async function init() {
-  initAuth();
-  const user = await checkSession();
-  if (user) handleAuthSuccess(user);
-
-  // Listen for session changes (expiry, sign out from another tab)
-  onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
-      // Session expired or user signed out — show auth overlay
-      currentUser = null;
-      document.getElementById('appShell').classList.add('hidden');
-      document.getElementById('authOverlay').classList.remove('hidden');
-      showAlert('error', 'Your session has expired. Please sign in again.');
-    } else if (event === 'SIGNED_IN' && session?.user && !currentUser) {
-      // Signed in from another tab or after token refresh
-      handleAuthSuccess(session.user);
-    }
-  });
+  // No auth — load dashboard directly
+  loadDraft();
+  fetchSidebarDrafts();
 
   // Step tab navigation
   document.querySelectorAll('.step-tab').forEach(t => t.onclick = () => goTo(+t.dataset.step));

@@ -19,70 +19,8 @@
 <!-- Skip to main content link (keyboard/screen-reader users) -->
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
-<!-- ── AUTH OVERLAY ── -->
-<div id="authOverlay" class="auth-overlay">
-  <div class="auth-split">
-    <div class="auth-brand">
-      <div class="auth-brand-inner">
-        <div class="auth-brand-logo">OnEasy</div>
-        <h1 class="auth-brand-title">Offer Letter Generator</h1>
-        <p class="auth-brand-desc">Generate legally compliant offer and appointment letters in minutes. Professional, accurate, and ready to sign.</p>
-        <div class="auth-brand-features">
-          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> AI-Powered Document Generation</div>
-          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> Legally Compliant Templates</div>
-          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> Instant DOCX Export</div>
-        </div>
-      </div>
-      <div class="auth-brand-footer">&copy; 2026 OnEasy. All rights reserved.</div>
-    </div>
-    <div class="auth-form-panel">
-      <div class="auth-card">
-        <div class="auth-card-header">
-          <h2 class="auth-card-title">Sign in to your account</h2>
-          <p class="auth-card-subtitle">Enter your credentials to access the dashboard.</p>
-        </div>
-        <div class="auth-tabs" role="tablist" aria-label="Authentication">
-          <button class="auth-tab active" id="loginTab" role="tab" aria-selected="true" aria-controls="loginForm">Login</button>
-          <button class="auth-tab" id="signupTab" role="tab" aria-selected="false" aria-controls="signupForm">Sign Up</button>
-        </div>
-        <form id="loginForm" class="auth-form-body" role="tabpanel" aria-labelledby="loginTab">
-          <div class="auth-field">
-            <label class="auth-label" for="loginEmail">Email Address</label>
-            <input type="email" id="loginEmail" class="auth-input" placeholder="name@company.com" autocomplete="email"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="loginPass">Password</label>
-            <input type="password" id="loginPass" class="auth-input" placeholder="Enter your password" autocomplete="current-password"/>
-          </div>
-          <button type="submit" class="auth-submit" id="loginSubmit">Sign In</button>
-        </form>
-        <form id="signupForm" class="auth-form-body hidden" role="tabpanel" aria-labelledby="signupTab">
-          <div class="auth-field">
-            <label class="auth-label" for="signupName">Full Name</label>
-            <input type="text" id="signupName" class="auth-input" placeholder="Your full name" autocomplete="name"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="signupEmail">Email Address</label>
-            <input type="email" id="signupEmail" class="auth-input" placeholder="name@company.com" autocomplete="email"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="signupPass">Password</label>
-            <input type="password" id="signupPass" class="auth-input" placeholder="Minimum 8 characters" autocomplete="new-password"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="signupPassConfirm">Confirm Password</label>
-            <input type="password" id="signupPassConfirm" class="auth-input" placeholder="Re-enter your password" autocomplete="new-password"/>
-          </div>
-          <button type="submit" class="auth-submit" id="signupSubmit">Create Account</button>
-        </form>
-        <div class="alert error auth-error-alert hidden" id="authError" role="alert"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── APP SHELL ── -->
-<div class="app-shell hidden" id="appShell">
+<!-- ── APP SHELL (No Auth - Dashboard loads directly) ── -->
+<div class="app-shell" id="appShell">
 
   <!-- MOBILE HAMBURGER -->
   <button class="mobile-hamburger" id="mobileMenuBtn" aria-label="Open menu">
@@ -119,9 +57,8 @@
 
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar" id="userAvatar">U</div>
-        <span class="sidebar-email" id="userEmailDisplay"></span>
-        <button class="sidebar-signout" id="logoutBtn" title="Sign Out">Sign Out</button>
+        <div class="sidebar-avatar" id="userAvatar">O</div>
+        <span class="sidebar-email" id="userEmailDisplay">OnEasy</span>
       </div>
     </div>
   </aside>

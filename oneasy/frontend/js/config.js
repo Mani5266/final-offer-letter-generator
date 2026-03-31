@@ -1,5 +1,4 @@
 export const API_URL = '/generate';
 
-// Safe to expose as they respect Supabase Row Level Security (RLS)
-export const SUPABASE_URL = 'https://jccvqxsobciorrniqlod.supabase.co';
-export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjY3ZxeHNvYmNpb3JybmlxbG9kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDQ4MTMsImV4cCI6MjA5MDEyMDgxM30.OrhR7SFeACdaXrQfdpvLjBufJFXHqJbVfa61UBuczqg';
+export const SUPABASE_URL = 'https://kihkewnaokmimfxceqox.supabase.co';
+export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpaGtld25hb2ttaW1meGNlcW94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5Mzg4MjYsImV4cCI6MjA5MDUxNDgyNn0._miUNQ5GqyFQLKW13p4-HGXq2yw4LimFboqPm352Vp4';
