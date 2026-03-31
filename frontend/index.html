@@ -19,70 +19,8 @@
 <!-- Skip to main content link (keyboard/screen-reader users) -->
 <a href="#main-content" class="skip-to-content">Skip to main content</a>
 
-<!-- ── AUTH OVERLAY ── -->
-<div id="authOverlay" class="auth-overlay">
-  <div class="auth-split">
-    <div class="auth-brand">
-      <div class="auth-brand-inner">
-        <div class="auth-brand-logo">OnEasy</div>
-        <h1 class="auth-brand-title">Offer Letter Generator</h1>
-        <p class="auth-brand-desc">Generate legally compliant offer and appointment letters in minutes. Professional, accurate, and ready to sign.</p>
-        <div class="auth-brand-features">
-          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> AI-Powered Document Generation</div>
-          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> Legally Compliant Templates</div>
-          <div class="auth-feature"><span class="auth-feature-icon">&#10003;</span> Instant DOCX Export</div>
-        </div>
-      </div>
-      <div class="auth-brand-footer">&copy; 2026 OnEasy. All rights reserved.</div>
-    </div>
-    <div class="auth-form-panel">
-      <div class="auth-card">
-        <div class="auth-card-header">
-          <h2 class="auth-card-title">Sign in to your account</h2>
-          <p class="auth-card-subtitle">Enter your credentials to access the dashboard.</p>
-        </div>
-        <div class="auth-tabs" role="tablist" aria-label="Authentication">
-          <button class="auth-tab active" id="loginTab" role="tab" aria-selected="true" aria-controls="loginForm">Login</button>
-          <button class="auth-tab" id="signupTab" role="tab" aria-selected="false" aria-controls="signupForm">Sign Up</button>
-        </div>
-        <form id="loginForm" class="auth-form-body" role="tabpanel" aria-labelledby="loginTab">
-          <div class="auth-field">
-            <label class="auth-label" for="loginEmail">Email Address</label>
-            <input type="email" id="loginEmail" class="auth-input" placeholder="name@company.com" autocomplete="email"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="loginPass">Password</label>
-            <input type="password" id="loginPass" class="auth-input" placeholder="Enter your password" autocomplete="current-password"/>
-          </div>
-          <button type="submit" class="auth-submit" id="loginSubmit">Sign In</button>
-        </form>
-        <form id="signupForm" class="auth-form-body hidden" role="tabpanel" aria-labelledby="signupTab">
-          <div class="auth-field">
-            <label class="auth-label" for="signupName">Full Name</label>
-            <input type="text" id="signupName" class="auth-input" placeholder="Your full name" autocomplete="name"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="signupEmail">Email Address</label>
-            <input type="email" id="signupEmail" class="auth-input" placeholder="name@company.com" autocomplete="email"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="signupPass">Password</label>
-            <input type="password" id="signupPass" class="auth-input" placeholder="Minimum 8 characters" autocomplete="new-password"/>
-          </div>
-          <div class="auth-field">
-            <label class="auth-label" for="signupPassConfirm">Confirm Password</label>
-            <input type="password" id="signupPassConfirm" class="auth-input" placeholder="Re-enter your password" autocomplete="new-password"/>
-          </div>
-          <button type="submit" class="auth-submit" id="signupSubmit">Create Account</button>
-        </form>
-        <div class="alert error auth-error-alert hidden" id="authError" role="alert"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ── APP SHELL ── -->
-<div class="app-shell hidden" id="appShell">
+<div class="app-shell" id="appShell">
 
   <!-- MOBILE HAMBURGER -->
   <button class="mobile-hamburger" id="mobileMenuBtn" aria-label="Open menu">
@@ -119,9 +57,8 @@
 
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar" id="userAvatar">U</div>
-        <span class="sidebar-email" id="userEmailDisplay"></span>
-        <button class="sidebar-signout" id="logoutBtn" title="Sign Out">Sign Out</button>
+        <div class="sidebar-avatar" id="appAvatar">O</div>
+        <span class="sidebar-email" id="appLabel">OnEasy</span>
       </div>
     </div>
   </aside>
@@ -155,18 +92,23 @@
           <div class="step-title">Company Information</div>
           <div class="step-desc">This appears on the letterhead and throughout the document.</div>
 
-          <div class="company-profile-bar">
-            <div class="field field--compact">
-              <label for="companyProfileSelect">Load Company Profile</label>
-              <select id="companyProfileSelect">
-                <option value="">-- Select a saved profile --</option>
-              </select>
-            </div>
-            <button class="btn btn-save-profile" id="saveProfileBtn" title="Save current company details as a profile">Save Profile</button>
-            <button class="btn btn-delete-profile hidden" id="deleteProfileBtn" title="Delete selected profile">Delete</button>
-          </div>
-
           <p class="required-legend" aria-hidden="true"><span class="req">*</span> indicates a required field</p>
+
+          <div class="field">
+            <label>Company Logo</label>
+            <div class="logo-upload-area" id="logoUploadArea">
+              <div class="logo-placeholder" id="logoPlaceholder">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                <span>Click or drag &amp; drop to upload logo</span>
+                <span class="hint">PNG, JPG or SVG &mdash; max 500 KB</span>
+              </div>
+              <div class="logo-preview hidden" id="logoPreview">
+                <img id="logoPreviewImg" alt="Company logo preview"/>
+                <button type="button" class="logo-remove-btn" id="logoRemoveBtn" title="Remove logo">&times;</button>
+              </div>
+              <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/svg+xml" class="sr-only"/>
+            </div>
+          </div>
 
           <div class="field">
             <label for="orgName">Organization Name <span class="req">*</span></label>
@@ -322,7 +264,15 @@
                 <option value="3 (three) months">3 months</option>
                 <option value="6 (six) months" selected>6 months</option>
                 <option value="12 (twelve) months">12 months</option>
+                <option value="custom">Custom</option>
               </select>
+              <div id="customProbationWrap" class="row row--inline hidden" style="margin-top: .5rem;">
+                <input type="number" id="customProbationValue" min="1" placeholder="Enter number" style="flex:1; max-width:140px;" aria-label="Custom probation number"/>
+                <select id="customProbationUnit" style="flex:1; max-width:140px;" aria-label="Custom probation unit">
+                  <option value="days">Days</option>
+                  <option value="months" selected>Months</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -417,10 +367,6 @@
           <div class="btn-row btn-row--centered">
             <button class="btn btn-back" data-goto="4">&larr; Back</button>
             <button class="btn btn-gen" id="generateBtn">Generate DOCX</button>
-            <button class="btn btn-pdf hidden" id="printPdfBtn" title="Open a print-friendly view to save as PDF">Save as PDF</button>
-          </div>
-          <div class="pdf-hint hidden" id="pdfHint">
-            Document generated. Click "Save as PDF" to open a print preview, then select "Save as PDF" in the print dialog.
           </div>
         </div>
 

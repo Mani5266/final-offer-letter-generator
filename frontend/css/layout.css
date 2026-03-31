@@ -312,25 +312,6 @@
   white-space: nowrap;
 }
 
-.sidebar-signout {
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.3rem 0.5rem;
-  border-radius: 4px;
-  transition: var(--transition);
-  white-space: nowrap;
-}
-
-.sidebar-signout:hover {
-  color: var(--error);
-  background: var(--error-bg);
-}
-
 /* ── CONTENT AREA ── */
 .content-area {
   flex: 1;

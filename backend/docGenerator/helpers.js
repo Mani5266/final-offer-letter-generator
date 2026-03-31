@@ -128,7 +128,7 @@ function docTitle(text) {
   return new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { before: 200, after: 200 },
-    children: [run(text, { bold: true, size: 18, underline: true })],
+    children: [run(text, { bold: true, size: 14, underline: true })],
   });
 }
 

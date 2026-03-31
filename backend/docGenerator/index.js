@@ -57,6 +57,15 @@ async function generateDoc(d) {
 
   const ctx = buildContext(d);
 
+  // Parse company logo from base64 data URL (if provided)
+  let logoBuffer = null;
+  if (d.companyLogo && d.companyLogo.startsWith('data:image')) {
+    try {
+      const base64Data = d.companyLogo.split(',')[1];
+      if (base64Data) logoBuffer = Buffer.from(base64Data, 'base64');
+    } catch (_) { /* ignore invalid logo data */ }
+  }
+
   const pageProps = {
     page: {
       size:   { width: PAGE_W, height: PAGE_H },
@@ -64,7 +73,7 @@ async function generateDoc(d) {
     },
   };
 
-  const header = makeHeader(d.orgName || '', d.cin || '');
+  const header = makeHeader(d.orgName || '', d.cin || '', logoBuffer);
   const footer = makeFooter();
 
   // Assemble all sections — pass raw data (d) and pre-computed context (ctx)

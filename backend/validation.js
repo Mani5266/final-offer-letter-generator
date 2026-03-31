@@ -17,6 +17,9 @@ const generatePayloadSchema = z.object({
   officeAddress: z.string().min(1, 'Office address is required').max(500),
   firstAid: z.string().max(200).optional().default(''),
 
+  // Company logo (base64 data URL, optional, max ~700KB encoded)
+  companyLogo: z.string().max(750000).optional().default(''),
+
   // Employee details
   salutation: z.string().max(20).optional().default('Mr.'),
   empFullName: z.string().min(1, 'Employee name is required').max(200),

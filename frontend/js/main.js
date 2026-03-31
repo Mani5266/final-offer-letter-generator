@@ -1,112 +1,22 @@
-import { API_URL } from './config.js';
+import { API_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { v, fmtDate, fmtTime, showAlert, toWords, fmtINR, escapeHTML } from './utils.js';
 import { onCTCChange } from './salary.js';
-import { login, signup, logout, checkSession, getAccessToken, onAuthStateChange, supabase } from './auth.js';
+
+// Initialize Supabase Client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentStep = 0;
-let currentUser = null;
 let currentPage = 'generator'; // 'generator' or 'history'
 
-// ── AUTH INTEGRATION ──
-function initAuth() {
-  const loginTab = document.getElementById('loginTab');
-  const signupTab = document.getElementById('signupTab');
-  const loginForm = document.getElementById('loginForm');
-  const signupForm = document.getElementById('signupForm');
-  const authError = document.getElementById('authError');
-
-  loginTab.onclick = () => {
-    loginTab.classList.add('active');
-    loginTab.setAttribute('aria-selected', 'true');
-    signupTab.classList.remove('active');
-    signupTab.setAttribute('aria-selected', 'false');
-    loginForm.classList.remove('hidden');
-    signupForm.classList.add('hidden');
-    authError.classList.add('hidden');
-  };
-
-  signupTab.onclick = () => {
-    signupTab.classList.add('active');
-    signupTab.setAttribute('aria-selected', 'true');
-    loginTab.classList.remove('active');
-    loginTab.setAttribute('aria-selected', 'false');
-    signupForm.classList.remove('hidden');
-    loginForm.classList.add('hidden');
-    authError.classList.add('hidden');
-  };
-
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('loginSubmit');
-    btn.disabled = true;
-    btn.textContent = 'Signing in…';
-    try {
-      const user = await login(v('loginEmail'), v('loginPass'));
-      if (user) handleAuthSuccess(user);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-    }
-  });
-
-  signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    // Confirm password match
-    if (v('signupPass') !== v('signupPassConfirm')) {
-      const errEl = document.getElementById('authError');
-      if (errEl) { errEl.textContent = 'Passwords do not match'; errEl.classList.remove('hidden'); }
-      return;
-    }
-    const btn = document.getElementById('signupSubmit');
-    btn.disabled = true;
-    btn.textContent = 'Creating account…';
-    try {
-      const data = await signup(v('signupEmail'), v('signupPass'), v('signupName'));
-      if (data) {
-        showAlert('success', 'Signup successful! Please check your email and then login.');
-        loginTab.click();
-      }
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Create Account';
-    }
-  });
-
-  document.getElementById('logoutBtn').onclick = logout;
-}
-
-function handleAuthSuccess(user) {
-  currentUser = user;
-  document.getElementById('authOverlay').classList.add('hidden');
-  document.getElementById('appShell').classList.remove('hidden');
-
-  // Set user email in sidebar
-  const emailDisplay = document.getElementById('userEmailDisplay');
-  const email = user.email || user.user_metadata?.full_name || '';
-  if (emailDisplay) emailDisplay.textContent = email;
-
-  // Set avatar initial
-  const avatar = document.getElementById('userAvatar');
-  if (avatar && email) avatar.textContent = email.charAt(0).toUpperCase();
-
-  loadDraft();
-  fetchSidebarDrafts();
-  loadCompanyProfiles();
-}
-
-async function getAuthHeaders() {
-  const token = await getAccessToken();
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
+function getHeaders() {
+  return { 'Content-Type': 'application/json' };
 }
 
 // ── SUPABASE CRUD HELPERS ──
 async function dbInsertOffer({ emp_name, designation, annual_ctc, payload }) {
   const { data, error } = await supabase
     .from('offers')
-    .insert({ user_id: currentUser.id, emp_name, designation, annual_ctc, payload })
+    .insert({ emp_name, designation, annual_ctc, payload })
     .select()
     .single();
   if (error) throw error;
@@ -160,93 +70,92 @@ async function dbSaveOffer({ id, emp_name, designation, annual_ctc, payload }) {
   }
 }
 
-// ── COMPANY PROFILE CRUD ──
-const COMPANY_PROFILE_FIELDS = ['orgName', 'entityType', 'cin', 'officeAddress', 'signatoryName', 'signatoryDesig', 'firstAid'];
+// ── COMPANY LOGO ──
+let _companyLogoBase64 = ''; // stores "data:image/png;base64,..." or empty
 
-async function dbGetCompanyProfiles() {
-  const { data, error } = await supabase
-    .from('company_profiles')
-    .select('*')
-    .order('profile_name', { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
+const MAX_LOGO_SIZE = 500 * 1024; // 500 KB
 
-async function dbGetCompanyProfileById(id) {
-  const { data, error } = await supabase
-    .from('company_profiles')
-    .select('*')
-    .eq('id', id)
-    .single();
-  if (error) throw error;
-  return data;
-}
+function initLogoUpload() {
+  const area = document.getElementById('logoUploadArea');
+  const fileInput = document.getElementById('logoFileInput');
+  const placeholder = document.getElementById('logoPlaceholder');
+  const preview = document.getElementById('logoPreview');
+  const previewImg = document.getElementById('logoPreviewImg');
+  const removeBtn = document.getElementById('logoRemoveBtn');
+  if (!area || !fileInput) return;
 
-async function dbInsertCompanyProfile(profile) {
-  const { data, error } = await supabase
-    .from('company_profiles')
-    .insert({ user_id: currentUser.id, ...profile })
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
+  // Click to upload
+  area.addEventListener('click', (e) => {
+    if (e.target === removeBtn || removeBtn.contains(e.target)) return;
+    fileInput.click();
+  });
 
-async function dbDeleteCompanyProfile(id) {
-  const { error } = await supabase
-    .from('company_profiles')
-    .delete()
-    .eq('id', id);
-  if (error) throw error;
-}
+  // Drag & drop
+  area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('dragover'); });
+  area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+  area.addEventListener('drop', (e) => {
+    e.preventDefault();
+    area.classList.remove('dragover');
+    const file = e.dataTransfer?.files?.[0];
+    if (file) processLogoFile(file);
+  });
 
-async function loadCompanyProfiles() {
-  const select = document.getElementById('companyProfileSelect');
-  if (!select) return;
-  // Show loading state
-  select.innerHTML = '<option value="">Loading profiles\u2026</option>';
-  select.disabled = true;
-  try {
-    const profiles = await dbGetCompanyProfiles();
-    // Keep the first "-- Select --" option, replace the rest
-    select.innerHTML = '<option value="">-- Select a saved profile --</option>' +
-      profiles.map(p => `<option value="${escapeHTML(p.id)}">${escapeHTML(p.profile_name)}</option>`).join('');
-    select.disabled = false;
-  } catch (e) {
-    console.error('Failed to load company profiles:', e);
-    select.innerHTML = '<option value="">Failed to load profiles</option>';
-    select.disabled = false;
+  // File input change
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) processLogoFile(file);
+    fileInput.value = ''; // reset so same file can be re-selected
+  });
+
+  // Remove button
+  removeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearLogo();
+    saveDraft();
+    debouncedServerSave();
+  });
+
+  function processLogoFile(file) {
+    // Validate type
+    const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      showAlert('error', 'Invalid file type. Please upload PNG, JPG, or SVG.');
+      return;
+    }
+    // Validate size
+    if (file.size > MAX_LOGO_SIZE) {
+      showAlert('error', 'Logo file must be under 500 KB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      _companyLogoBase64 = reader.result;
+      showLogoPreview(_companyLogoBase64);
+      saveDraft();
+      debouncedServerSave();
+    };
+    reader.readAsDataURL(file);
   }
 }
 
-function applyCompanyProfile(profile) {
-  const fieldMap = {
-    orgName: profile.org_name,
-    entityType: profile.entity_type,
-    cin: profile.cin,
-    officeAddress: profile.office_address,
-    signatoryName: profile.signatory_name,
-    signatoryDesig: profile.signatory_desig,
-    firstAid: profile.first_aid,
-  };
-  for (const [fieldId, value] of Object.entries(fieldMap)) {
-    const el = document.getElementById(fieldId);
-    if (el && value !== undefined) el.value = value;
-  }
-  saveDraft();
-  debouncedServerSave();
+function showLogoPreview(dataUrl) {
+  const placeholder = document.getElementById('logoPlaceholder');
+  const preview = document.getElementById('logoPreview');
+  const previewImg = document.getElementById('logoPreviewImg');
+  if (!placeholder || !preview || !previewImg) return;
+  previewImg.src = dataUrl;
+  placeholder.classList.add('hidden');
+  preview.classList.remove('hidden');
 }
 
-function getCompanyProfileFromForm() {
-  return {
-    org_name: v('orgName') || '',
-    entity_type: v('entityType') || 'Company',
-    cin: v('cin') || '',
-    office_address: v('officeAddress') || '',
-    signatory_name: v('signatoryName') || '',
-    signatory_desig: v('signatoryDesig') || '',
-    first_aid: v('firstAid') || 'HR Room',
-  };
+function clearLogo() {
+  _companyLogoBase64 = '';
+  const placeholder = document.getElementById('logoPlaceholder');
+  const preview = document.getElementById('logoPreview');
+  const previewImg = document.getElementById('logoPreviewImg');
+  if (placeholder) placeholder.classList.remove('hidden');
+  if (preview) preview.classList.add('hidden');
+  if (previewImg) previewImg.src = '';
 }
 
 // ── PAGE NAVIGATION ──
@@ -321,7 +230,7 @@ function restoreFromHash() {
 function buildReview() {
   const ctc = parseInt(v('annualCTC')) || 0;
   const sections = [
-    { title: 'Company', rows: [['Name', v('orgName')], ['Signatory', v('signatoryName')]] },
+    { title: 'Company', rows: [['Name', v('orgName')], ['Signatory', v('signatoryName')]], logo: _companyLogoBase64 },
     { title: 'Employee', rows: [['Name', v('empFullName')], ['Designation', v('designation')]] },
     { title: 'Compensation', rows: [['Annual CTC', fmtINR(ctc)]] },
   ];
@@ -330,6 +239,7 @@ function buildReview() {
     grid.innerHTML = sections.map(s => `
       <div class="rv-card">
         <h4>${escapeHTML(s.title)}</h4>
+        ${s.logo ? `<div class="rv-row"><span>Logo</span><img src="${s.logo}" alt="Logo" class="rv-logo-thumb"/></div>` : ''}
         ${s.rows.map(([k,val]) => `<div class="rv-row"><span>${escapeHTML(k)}</span><strong>${escapeHTML(val) || '\u2014'}</strong></div>`).join('')}
       </div>
     `).join('');
@@ -341,7 +251,7 @@ const FIELD_STEP_MAP = {
   orgName: 0, entityType: 0, cin: 0, officeAddress: 0, signatoryName: 0, signatoryDesig: 0, firstAid: 0,
   salutation: 1, empFullName: 1, empAddress: 1, designation: 1, employeeId: 1, reportingManager: 1, attendanceSystem: 1,
   annualCTC: 2,
-  offerDate: 3, offerValidity: 3, joiningDate: 3, probationPeriod: 3, workDayFrom: 3, workDayTo: 3, workStart: 3, workEnd: 3, breakDuration: 3,
+  offerDate: 3, offerValidity: 3, joiningDate: 3, probationPeriod: 3, customProbationValue: 3, workDayFrom: 3, workDayTo: 3, workStart: 3, workEnd: 3, breakDuration: 3,
   monthlyLeave: 4, carryForward: 4, noticePeriod: 4, abscondDays: 4,
 };
 
@@ -396,6 +306,16 @@ function validate() {
     markFieldError('annualCTC', 'Annual CTC must be greater than zero');
   }
 
+  // Custom probation must have a value
+  const probSel = document.getElementById('probationPeriod');
+  if (probSel && probSel.value === 'custom') {
+    const customVal = parseInt(v('customProbationValue')) || 0;
+    if (customVal < 1) {
+      errors.push({ id: 'customProbationValue', label: 'Custom Probation Period' });
+      markFieldError('customProbationValue', 'Enter a valid probation period number');
+    }
+  }
+
   // Cross-field date validation
   const offerDate = v('offerDate');
   const offerValidity = v('offerValidity');
@@ -432,17 +352,17 @@ let currentOfferId = null;
 
 function saveDraft() {
   const draft = { currentStep, currentOfferId, data: {} };
-  // Only collect form-card inputs — excludes auth fields (loginPass, signupPass, etc.)
+  // Only collect form-card inputs
   document.querySelectorAll('.form-card input, .form-card select, .form-card textarea').forEach(el => {
     if (el.id) draft.data[el.id] = el.value;
   });
-  const key = currentUser ? `oneasy_draft_${currentUser.id}` : 'oneasy_draft';
-  localStorage.setItem(key, JSON.stringify(draft));
+  // Persist company logo (base64)
+  if (_companyLogoBase64) draft.companyLogo = _companyLogoBase64;
+  localStorage.setItem('oneasy_draft', JSON.stringify(draft));
 }
 
 function loadDraft() {
-  const key = currentUser ? `oneasy_draft_${currentUser.id}` : 'oneasy_draft';
-  const saved = localStorage.getItem(key);
+  const saved = localStorage.getItem('oneasy_draft');
   if (!saved) return;
   try {
     const parsed = JSON.parse(saved);
@@ -453,6 +373,11 @@ function loadDraft() {
       const el = document.getElementById(id);
       if (el) el.value = data[id];
     });
+    // Restore company logo
+    if (parsed.companyLogo) {
+      _companyLogoBase64 = parsed.companyLogo;
+      showLogoPreview(_companyLogoBase64);
+    }
     onCTCChange();
     goTo(step || 0);
   } catch (e) {
@@ -486,11 +411,24 @@ async function resetForm() {
     }
   });
   const probation = document.getElementById('probationPeriod');
-  if (probation) probation.value = '6 (six) months';
+  if (probation) {
+    probation.value = '6 (six) months';
+    delete probation.dataset.customComposed;
+  }
+  // Reset custom probation fields
+  const customProbWrap = document.getElementById('customProbationWrap');
+  if (customProbWrap) customProbWrap.classList.add('hidden');
+  const customProbVal = document.getElementById('customProbationValue');
+  if (customProbVal) { customProbVal.value = ''; customProbVal.required = false; }
+  const customProbUnit = document.getElementById('customProbationUnit');
+  if (customProbUnit) customProbUnit.value = 'months';
   const wdf = document.getElementById('workDayFrom');
   if (wdf) wdf.value = 'Monday';
   const wdt = document.getElementById('workDayTo');
   if (wdt) wdt.value = 'Saturday';
+
+  // Reset company logo
+  clearLogo();
 
   onCTCChange();
   goTo(0);
@@ -960,13 +898,70 @@ async function downloadStoredDoc(id) {
   }
 }
 
+/* ── Custom Probation Period ── */
+function initCustomProbation() {
+  const sel = document.getElementById('probationPeriod');
+  const wrap = document.getElementById('customProbationWrap');
+  const numInput = document.getElementById('customProbationValue');
+  const unitSel = document.getElementById('customProbationUnit');
+  if (!sel || !wrap || !numInput || !unitSel) return;
+
+  function toggleCustom() {
+    if (sel.value === 'custom') {
+      wrap.classList.remove('hidden');
+      numInput.required = true;
+    } else {
+      wrap.classList.add('hidden');
+      numInput.required = false;
+    }
+  }
+
+  function composeCustomValue() {
+    if (sel.value !== 'custom') return;
+    const n = parseInt(numInput.value);
+    if (!n || n < 1) return;
+    const unit = unitSel.value; // 'days' or 'months'
+    // Build the document-ready string, e.g. "45 (forty-five) days"
+    const words = numberToWords(n);
+    sel.dataset.customComposed = `${n} (${words}) ${unit}`;
+  }
+
+  sel.addEventListener('change', () => { toggleCustom(); composeCustomValue(); saveDraft(); });
+  numInput.addEventListener('input', () => { composeCustomValue(); saveDraft(); });
+  unitSel.addEventListener('change', () => { composeCustomValue(); saveDraft(); });
+
+  // Run once on load in case draft restored 'custom'
+  toggleCustom();
+  composeCustomValue();
+}
+
+/** Convert a positive integer to English words (supports up to 9999). */
+function numberToWords(n) {
+  const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+    'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+  const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  if (n < 20) return ones[n];
+  if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? '-' + ones[n % 10] : '');
+  if (n < 1000) return ones[Math.floor(n / 100)] + ' hundred' + (n % 100 ? ' and ' + numberToWords(n % 100) : '');
+  return numberToWords(Math.floor(n / 1000)) + ' thousand' + (n % 1000 ? ' ' + numberToWords(n % 1000) : '');
+}
+
 function getPayload() {
   const p = {};
-  // Only collect form-card inputs — excludes auth fields (loginPass, signupPass, etc.)
+  // Collect form-card inputs
   document.querySelectorAll('.form-card input, .form-card select, .form-card textarea').forEach(el => {
     if (el.id) p[el.id] = el.value;
   });
   p.annualCTC = parseInt(v('annualCTC')) || 0;
+  // Resolve custom probation period
+  const probSel = document.getElementById('probationPeriod');
+  if (probSel && probSel.value === 'custom' && probSel.dataset.customComposed) {
+    p.probationPeriod = probSel.dataset.customComposed;
+  }
+  // Include company logo if uploaded
+  if (_companyLogoBase64) {
+    p.companyLogo = _companyLogoBase64;
+  }
   return p;
 }
 
@@ -979,12 +974,6 @@ async function generate() {
   const generateBtn = document.getElementById('generateBtn');
   if (spinnerWrap) spinnerWrap.classList.remove('hidden');
   if (generateBtn) generateBtn.disabled = true;
-
-  // Hide PDF button from previous generation
-  const printPdfBtn = document.getElementById('printPdfBtn');
-  const pdfHint = document.getElementById('pdfHint');
-  if (printPdfBtn) printPdfBtn.classList.add('hidden');
-  if (pdfHint) pdfHint.classList.add('hidden');
 
   const payload = getPayload();
   const empName = payload.empFullName || 'Untitled';
@@ -1011,7 +1000,7 @@ async function generate() {
     const generatePayload = { ...payload, _offerId: currentOfferId };
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: await getAuthHeaders(),
+      headers: getHeaders(),
       body: JSON.stringify(generatePayload)
     });
     if (!res.ok) {
@@ -1056,12 +1045,6 @@ async function generate() {
     }, 0);
     showAlert('success', 'Downloaded & saved to cloud!');
 
-    // Show "Save as PDF" button after successful generation
-    const printPdfBtn = document.getElementById('printPdfBtn');
-    const pdfHint = document.getElementById('pdfHint');
-    if (printPdfBtn) printPdfBtn.classList.remove('hidden');
-    if (pdfHint) pdfHint.classList.remove('hidden');
-
     fetchSidebarDrafts(); // Refresh sidebar after generation
     if (currentPage === 'history') fetchOffers();
   } catch (e) {
@@ -1074,92 +1057,6 @@ async function generate() {
 }
 
 // ── PRINT / PDF VIEW ──
-function openPrintView(d) {
-  const orgName = escapeHTML(d.orgName || '');
-  const empName = escapeHTML(d.empFullName || '');
-  const designation = escapeHTML(d.designation || '');
-  const ctc = d.annualCTC || 0;
-  const ctcFormatted = fmtINR(ctc);
-  const ctcWords = toWords(ctc);
-  const offerDate = fmtDate(d.offerDate);
-  const joiningDate = fmtDate(d.joiningDate);
-  const offerValidity = fmtDate(d.offerValidity);
-  const workDays = `${escapeHTML(d.workDayFrom || 'Monday')} to ${escapeHTML(d.workDayTo || 'Saturday')}`;
-  const workTime = `${fmtTime(d.workStart)} to ${fmtTime(d.workEnd)} IST`;
-  const salute = escapeHTML(d.salutation || 'Mr.');
-  const firstName = escapeHTML((d.empFullName || '').split(' ')[0]);
-
-  const html = `<!DOCTYPE html>
-<html><head>
-<meta charset="UTF-8">
-<title>Offer Letter - ${empName}</title>
-<style>
-  @media print {
-    @page { margin: 2cm; size: A4; }
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .no-print { display: none !important; }
-  }
-  body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #000; max-width: 210mm; margin: 0 auto; padding: 2cm; }
-  h1 { text-align: center; font-size: 16pt; margin-bottom: 1.5em; text-decoration: underline; }
-  h2 { text-align: center; font-size: 14pt; margin: 2em 0 0.5em; text-decoration: underline; }
-  .label-value { margin-bottom: 0.3em; }
-  .label { font-weight: bold; }
-  .clause { margin: 1em 0 0.5em; font-weight: bold; }
-  .indent { margin-left: 2em; }
-  .sig-block { margin-top: 3em; }
-  .print-bar { position: fixed; top: 0; left: 0; right: 0; background: #0f172a; color: #fff; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; z-index: 9999; font-family: sans-serif; font-size: 14px; }
-  .print-bar button { background: #fff; color: #0f172a; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
-  .print-bar button:hover { background: #e2e8f0; }
-  .print-body { margin-top: 40px; }
-</style>
-</head><body>
-<div class="print-bar no-print">
-  <span>Print preview - Use Ctrl+P or click the button to save as PDF</span>
-  <button onclick="window.print()">Print / Save as PDF</button>
-</div>
-<div class="print-body">
-
-<h1>OFFER LETTER</h1>
-<div class="label-value"><span class="label">Date:</span> ${offerDate}</div>
-<p>To,<br><strong>${empName}</strong><br>${escapeHTML(d.empAddress || '')}</p>
-<p><span class="label">Subject:</span> Offer of Employment as ${designation}</p>
-<p>Dear ${salute} ${firstName},</p>
-
-<p class="clause">1. Offer of Employment</p>
-<p class="indent">On behalf of <strong>${orgName}</strong>, we are pleased to offer you the position of <strong>${designation}</strong> in our organization.</p>
-
-<p class="clause">2. Compensation</p>
-<p class="indent">Your annual compensation will be <strong>INR ${ctcFormatted}</strong> (${ctcWords} Only). The detailed breakdown is provided in Annexure A.</p>
-
-<p class="clause">3. Date of Joining</p>
-<p class="indent">Your proposed date of joining is <strong>${joiningDate}</strong>.</p>
-
-<p class="clause">4. Working Hours</p>
-<p class="indent">Working days: <strong>${workDays}</strong>, from <strong>${workTime}</strong>.</p>
-
-<p class="clause">5. Validity of Offer</p>
-<p class="indent">This offer is valid until <strong>${offerValidity}</strong>.</p>
-
-<div class="sig-block">
-<p>Yours sincerely,</p>
-<p><strong>For ${orgName}</strong></p>
-<br>
-<p>________________________________</p>
-<p><strong>${escapeHTML(d.signatoryName || '')}</strong><br>${escapeHTML(d.signatoryDesig || '')}</p>
-</div>
-
-</div>
-</body></html>`;
-
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-  } else {
-    showAlert('error', 'Pop-up blocked. Please allow pop-ups for this site.');
-  }
-}
-
 let _modalTriggerEl = null; // element that opened the modal, to return focus
 const detailModal = document.getElementById('detailModal');
 
@@ -1183,23 +1080,9 @@ function closeModal() {
 }
 
 async function init() {
-  initAuth();
-  const user = await checkSession();
-  if (user) handleAuthSuccess(user);
-
-  // Listen for session changes (expiry, sign out from another tab)
-  onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
-      // Session expired or user signed out — show auth overlay
-      currentUser = null;
-      document.getElementById('appShell').classList.add('hidden');
-      document.getElementById('authOverlay').classList.remove('hidden');
-      showAlert('error', 'Your session has expired. Please sign in again.');
-    } else if (event === 'SIGNED_IN' && session?.user && !currentUser) {
-      // Signed in from another tab or after token refresh
-      handleAuthSuccess(session.user);
-    }
-  });
+  // Load dashboard directly
+  loadDraft();
+  fetchSidebarDrafts();
 
   // Step tab navigation
   document.querySelectorAll('.step-tab').forEach(t => t.onclick = () => goTo(+t.dataset.step));
@@ -1210,12 +1093,6 @@ async function init() {
   });
 
   document.getElementById('generateBtn').onclick = generate;
-
-  // "Save as PDF" button: opens a print-friendly view for browser print-to-PDF
-  document.getElementById('printPdfBtn').onclick = () => {
-    const payload = getPayload();
-    openPrintView(payload);
-  };
 
   // Save draft on form changes + auto-sync to server + clear field errors
   document.querySelectorAll('input, select, textarea').forEach(el => {
@@ -1234,6 +1111,12 @@ async function init() {
 
   // Bind CTC handler — use addEventListener so the generic oninput (error-clearing + draft save) is preserved
   document.getElementById('annualCTC').addEventListener('input', () => { onCTCChange(); });
+
+  // Custom Probation Period handler
+  initCustomProbation();
+
+  // Company Logo upload handler
+  initLogoUpload();
 
   // Sidebar: New Offer Letter
   document.getElementById('newOfferBtn').onclick = resetForm;
@@ -1286,67 +1169,6 @@ async function init() {
 
   // Refresh form button (in Review & Generate step)
   document.getElementById('refreshFormBtn').onclick = resetForm;
-
-  // ── COMPANY PROFILE HANDLERS ──
-  const profileSelect = document.getElementById('companyProfileSelect');
-  const deleteProfileBtn = document.getElementById('deleteProfileBtn');
-
-  if (profileSelect) {
-    profileSelect.onchange = async () => {
-      const selectedId = profileSelect.value;
-      if (!selectedId) {
-        if (deleteProfileBtn) deleteProfileBtn.classList.add('hidden');
-        return;
-      }
-      try {
-        const profile = await dbGetCompanyProfileById(selectedId);
-        if (profile) {
-          applyCompanyProfile(profile);
-          showAlert('success', `Loaded profile "${profile.profile_name}".`);
-        }
-        if (deleteProfileBtn) deleteProfileBtn.classList.remove('hidden');
-      } catch (e) {
-        showAlert('error', 'Failed to load profile.');
-      }
-    };
-  }
-
-  document.getElementById('saveProfileBtn').onclick = async () => {
-    const orgName = v('orgName');
-    if (!orgName) {
-      showAlert('error', 'Enter an Organization Name before saving a profile.');
-      return;
-    }
-    const profileName = prompt('Profile name:', orgName);
-    if (!profileName) return;
-
-    try {
-      await dbInsertCompanyProfile({
-        profile_name: profileName.trim(),
-        ...getCompanyProfileFromForm(),
-      });
-      await loadCompanyProfiles();
-      showAlert('success', `Profile "${profileName.trim()}" saved.`);
-    } catch (e) {
-      showAlert('error', 'Failed to save profile: ' + e.message);
-    }
-  };
-
-  if (deleteProfileBtn) {
-    deleteProfileBtn.onclick = async () => {
-      const selectedId = profileSelect?.value;
-      if (!selectedId) return;
-      if (!confirm('Delete this company profile?')) return;
-      try {
-        await dbDeleteCompanyProfile(selectedId);
-        await loadCompanyProfiles();
-        if (deleteProfileBtn) deleteProfileBtn.classList.add('hidden');
-        showAlert('success', 'Profile deleted.');
-      } catch (e) {
-        showAlert('error', 'Failed to delete profile.');
-      }
-    };
-  }
 
   // Mobile hamburger menu
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
