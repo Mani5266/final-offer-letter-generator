@@ -2,13 +2,13 @@ import { API_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { v, fmtDate, fmtTime, showAlert, toWords, fmtINR, escapeHTML } from './utils.js';
 import { onCTCChange } from './salary.js';
 
-// Initialize Supabase Client (no auth needed)
+// Initialize Supabase Client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentStep = 0;
 let currentPage = 'generator'; // 'generator' or 'history'
 
-function getAuthHeaders() {
+function getHeaders() {
   return { 'Content-Type': 'application/json' };
 }
 
@@ -1000,7 +1000,7 @@ async function generate() {
     const generatePayload = { ...payload, _offerId: currentOfferId };
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: getHeaders(),
       body: JSON.stringify(generatePayload)
     });
     if (!res.ok) {
@@ -1080,7 +1080,7 @@ function closeModal() {
 }
 
 async function init() {
-  // No auth — load dashboard directly
+  // Load dashboard directly
   loadDraft();
   fetchSidebarDrafts();
 

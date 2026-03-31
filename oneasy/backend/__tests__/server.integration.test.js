@@ -3,7 +3,6 @@
 // Must mock supabase before requiring anything that imports it
 jest.mock('../utils/supabase', () => ({
   supabaseAdmin: {
-    auth: { getUser: jest.fn() },
     from: jest.fn(() => ({
       select: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
@@ -105,43 +104,12 @@ describe('Server integration tests', () => {
     });
   });
 
-  // ── POST /generate — auth errors ────────────────────────────────────
+  // ── POST /generate — validation ──────────────────────────────────────
   describe('POST /generate', () => {
-    test('returns 401 without Authorization header', async () => {
-      const res = await agent()
-        .post('/generate')
-        .set(HTTPS_HEADER)
-        .send({ orgName: 'Test' });
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-    });
-
-    test('returns 401 with invalid token', async () => {
-      const { supabaseAdmin } = require('../utils/supabase');
-      supabaseAdmin.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: { message: 'invalid token' },
-      });
-
-      const res = await agent()
-        .post('/generate')
-        .set(HTTPS_HEADER)
-        .set('Authorization', 'Bearer bad-token')
-        .send({ orgName: 'Test' });
-      expect(res.status).toBe(401);
-    });
-
     test('returns 400 on validation failure (missing required fields)', async () => {
-      const { supabaseAdmin } = require('../utils/supabase');
-      supabaseAdmin.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-1', email: 'a@b.com' } },
-        error: null,
-      });
-
       const res = await agent()
         .post('/generate')
         .set(HTTPS_HEADER)
-        .set('Authorization', 'Bearer good-token')
         .send({ orgName: 'Test' }); // missing most required fields
 
       expect(res.status).toBe(400);
@@ -151,16 +119,9 @@ describe('Server integration tests', () => {
     });
 
     test('returns DOCX on valid request', async () => {
-      const { supabaseAdmin } = require('../utils/supabase');
-      supabaseAdmin.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-1', email: 'a@b.com' } },
-        error: null,
-      });
-
       const res = await agent()
         .post('/generate')
         .set(HTTPS_HEADER)
-        .set('Authorization', 'Bearer good-token')
         .send({
           orgName: 'Acme Corp',
           officeAddress: '123 Main St',

@@ -149,11 +149,8 @@ app.post('/generate', generateLimiter, async (req, res) => {
 });
 
 // ── OFFER MANAGEMENT (CRUD) ──────────────────────────────────────────────────
-// CRUD operations are handled directly by the frontend Supabase client
-// (which is authenticated and respects RLS). Legacy backend CRUD routes
-// have been removed to eliminate the risk of bypassing RLS via supabaseAdmin.
-// If backend CRUD is needed in the future, use a per-request Supabase client
-// initialized with the user's JWT token to respect RLS policies.
+// CRUD operations are handled directly by the frontend Supabase client.
+// If backend CRUD is needed in the future, use a per-request Supabase client.
 
 // ── HEALTH CHECK ──────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
