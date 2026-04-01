@@ -293,26 +293,6 @@
   min-width: 0;
 }
 
-.sidebar-logout-btn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px;
-  cursor: pointer;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.sidebar-logout-btn:hover {
-  color: #ef4444;
-  border-color: #ef4444;
-  background: #fef2f2;
-}
-
 .sidebar-avatar {
   width: 32px;
   height: 32px;
