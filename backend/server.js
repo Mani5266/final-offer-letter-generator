@@ -9,6 +9,7 @@ const { validateGeneratePayload } = require('./validation');
 const log = require('./utils/logger');
 const { corsOptions } = require('./config/cors');
 const { generalLimiter, generateLimiter } = require('./config/rateLimit');
+const { verifyAuth } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -90,7 +91,7 @@ app.use(express.static(path.join(__dirname, '../frontend'), {
 
 // ── DOCUMENT GENERATION ──────────────────────────────────────────────────────
 
-app.post('/generate', generateLimiter, async (req, res) => {
+app.post('/generate', generateLimiter, verifyAuth, async (req, res) => {
   try {
     // Step 3: Validate input
     const validation = validateGeneratePayload(req.body);

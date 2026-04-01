@@ -1,28 +1,63 @@
 -- ══════════════════════════════════════════════════════════════════════════════
--- COMPLETE DATABASE SETUP (NO AUTH)
+-- COMPLETE DATABASE SETUP (WITH AUTH)
 -- Run this in your Supabase SQL Editor to set up all tables.
--- All auth references (user_id, RLS, policies, profiles, audit_logs) removed.
+-- Includes user_id columns, RLS policies, and profiles table.
 -- ══════════════════════════════════════════════════════════════════════════════
 
 -- 1. DROP EXISTING TABLES (CAUTION: This deletes all data!)
 DROP TABLE IF EXISTS public.company_profiles CASCADE;
 DROP TABLE IF EXISTS public.offers CASCADE;
-
--- Drop legacy auth remnants if they exist
 DROP TABLE IF EXISTS public.profiles CASCADE;
-DROP TABLE IF EXISTS public.audit_logs CASCADE;
 
 -- 2. ENABLE EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 
 -- ══════════════════════════════════════════════════════════════════════════════
+-- TABLE: profiles
+-- Auto-created when a user signs up (via trigger)
+-- ══════════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own profile"
+    ON public.profiles FOR SELECT
+    USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile"
+    ON public.profiles FOR UPDATE
+    USING (auth.uid() = id);
+
+-- Auto-create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (id, email)
+    VALUES (NEW.id, NEW.email);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+
+-- ══════════════════════════════════════════════════════════════════════════════
 -- TABLE: offers
--- Stores generated offer letter data
+-- Stores generated offer letter data (scoped to authenticated user)
 -- ══════════════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS public.offers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     emp_name TEXT NOT NULL,
     designation TEXT NOT NULL,
     annual_ctc NUMERIC NOT NULL,
@@ -32,6 +67,24 @@ CREATE TABLE IF NOT EXISTS public.offers (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own offers"
+    ON public.offers FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own offers"
+    ON public.offers FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own offers"
+    ON public.offers FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own offers"
+    ON public.offers FOR DELETE
+    USING (auth.uid() = user_id);
+
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TABLE: company_profiles
@@ -40,6 +93,7 @@ CREATE TABLE IF NOT EXISTS public.offers (
 
 CREATE TABLE IF NOT EXISTS public.company_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     profile_name TEXT NOT NULL,
     org_name TEXT NOT NULL DEFAULT '',
     entity_type TEXT DEFAULT 'Company',
@@ -51,6 +105,24 @@ CREATE TABLE IF NOT EXISTS public.company_profiles (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+ALTER TABLE public.company_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own company profiles"
+    ON public.company_profiles FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own company profiles"
+    ON public.company_profiles FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own company profiles"
+    ON public.company_profiles FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own company profiles"
+    ON public.company_profiles FOR DELETE
+    USING (auth.uid() = user_id);
 
 
 -- ══════════════════════════════════════════════════════════════════════════════

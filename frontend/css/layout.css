@@ -317,6 +317,27 @@
   white-space: nowrap;
 }
 
+.sidebar-logout-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.sidebar-logout-btn:hover {
+  background: var(--error-bg, #fef2f2);
+  border-color: var(--error, #ef4444);
+  color: var(--error, #ef4444);
+}
+
 /* ── CONTENT AREA ── */
 .content-area {
   flex: 1;
