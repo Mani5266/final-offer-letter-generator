@@ -1,22 +1,23 @@
-import { API_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import { API_URL, supabase, requireAuth, getUserId, getAccessToken } from './config.js';
 import { v, fmtDate, fmtTime, showAlert, toWords, fmtINR, escapeHTML } from './utils.js';
 import { onCTCChange } from './salary.js';
-
-// Initialize Supabase Client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentStep = 0;
 let currentPage = 'generator'; // 'generator' or 'history'
 
-function getHeaders() {
-  return { 'Content-Type': 'application/json' };
+async function getHeaders() {
+  const token = await getAccessToken();
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
 }
 
 // ── SUPABASE CRUD HELPERS ──
 async function dbInsertOffer({ emp_name, designation, annual_ctc, payload }) {
+  const userId = await getUserId();
   const { data, error } = await supabase
     .from('offers')
-    .insert({ emp_name, designation, annual_ctc, payload })
+    .insert({ emp_name, designation, annual_ctc, payload, user_id: userId })
     .select()
     .single();
   if (error) throw error;
@@ -1000,7 +1001,7 @@ async function generate() {
     const generatePayload = { ...payload, _offerId: currentOfferId };
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: await getHeaders(),
       body: JSON.stringify(generatePayload)
     });
     if (!res.ok) {
@@ -1080,6 +1081,36 @@ function closeModal() {
 }
 
 async function init() {
+  // ── AUTH GUARD ──
+  const session = await requireAuth();
+  if (!session) return; // redirect to login.html
+
+  // Listen for sign-out (e.g. token expired, manual logout)
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      window.location.href = '/login.html';
+    }
+  });
+
+  // ── LOGOUT BUTTON ──
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+      await supabase.auth.signOut();
+      window.location.href = '/login.html';
+    };
+  }
+
+  // Show user email in sidebar
+  const emailEl = document.getElementById('appLabel');
+  if (emailEl && session.user?.email) {
+    emailEl.textContent = session.user.email;
+  }
+  const avatarEl = document.getElementById('appAvatar');
+  if (avatarEl && session.user?.email) {
+    avatarEl.textContent = session.user.email.charAt(0).toUpperCase();
+  }
+
   // Load dashboard directly
   loadDraft();
   fetchSidebarDrafts();
