@@ -5,7 +5,7 @@ const constants = require('./constants');
 const helpers   = require('./helpers');
 const numberUtils = require('./numberUtils');
 const tables    = require('./tables');
-const { makeHeader, makeFooter } = require('./headerFooter');
+const { makeHeader } = require('./headerFooter');
 
 // Section Modules
 const { getOfferLetter }       = require('./sections/offerLetter');
@@ -71,10 +71,10 @@ async function generateDoc(d) {
       size:   { width: PAGE_W, height: PAGE_H },
       margin: { top: MAR_TOP, right: MAR_RIGHT, bottom: MAR_BOT, left: MAR_LEFT, header: 708, footer: 708 },
     },
+    titlePage: true,
   };
 
   const header = makeHeader(d.orgName || '', d.cin || '', logoBuffer);
-  const footer = makeFooter();
 
   // Assemble all sections — pass raw data (d) and pre-computed context (ctx)
   const offerLetter       = getOfferLetter(d, ctx);
@@ -91,8 +91,7 @@ async function generateDoc(d) {
     },
     sections: [{
       properties: pageProps,
-      headers: { default: header },
-      footers: { default: footer },
+      headers: { first: header },
       children: [
         ...offerLetter,
         ...appointmentLetter,
