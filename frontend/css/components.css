@@ -61,7 +61,7 @@
 .step-tab:hover { color: var(--text-main); }
 .step-tab.active { color: var(--accent-dark); border-bottom-color: var(--accent); font-weight: 700; }
 .step-tab.done { color: var(--success); }
-.step-tab.done::after { content: ' \2713'; }
+.step-tab.done::before { content: '\2713 '; }
 
 
 /* ── FORM CARD ── */
@@ -69,6 +69,7 @@
   background: var(--bg-card); border-radius: var(--radius);
   box-shadow: var(--shadow-sm); overflow: hidden;
   border: 1.5px solid var(--border);
+  border-left: 4px solid var(--accent);
 }
 .step-pane { display: none; padding: 2.5rem; }
 .step-pane.active { display: block; animation: fadeUp 0.3s ease; }
