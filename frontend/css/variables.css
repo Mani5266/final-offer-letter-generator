@@ -1,14 +1,14 @@
 :root {
   /* Core Colors — Dark Navy */
-  --primary: #0f172a;       /* Navy 900 */
+  --primary: #0f1a2e;       /* Navy 900 */
   --primary-light: #1e293b; /* Navy 800 */
 
-  /* Gold / Amber Accent */
-  --accent: #d4a017;        /* Rich Gold */
-  --accent-light: #e6b422;  /* Bright Gold */
+  /* Gold / Amber Accent — matches OnEasy design system */
+  --accent: #f0b929;        /* Gold 500 */
+  --accent-light: #f9d056;  /* Gold 400 */
   --accent-bg: #fefce8;     /* Very subtle gold tint */
-  --accent-dark: #b8860b;   /* Dark Gold */
-  --accent-border: #e6c54d; /* Gold border */
+  --accent-dark: #d9a21e;   /* Gold 600 */
+  --accent-border: #fdf0c4; /* Gold 200 */
 
   /* Backgrounds */
   --bg-main: #f8fafc;       /* Slate 50 — clean neutral gray */
@@ -36,7 +36,7 @@
   --text-light: #94a3b8;     /* Slate 400 — light text on dark bg */
 
   /* Sidebar */
-  --sidebar-bg: #0f172a;
+  --sidebar-bg: #0f1a2e;
   --sidebar-hover: #1e293b;
   --sidebar-active: #1e293b;
   --sidebar-text: #e2e8f0;
@@ -48,7 +48,7 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
-  --shadow-gold: 0 4px 12px rgba(212, 160, 23, 0.15);
+  --shadow-gold: 0 4px 12px rgba(240, 185, 41, 0.15);
 
   /* Spacing Scale (4px base) */
   --space-1: 0.25rem;  /*  4px */

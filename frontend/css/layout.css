@@ -90,7 +90,7 @@
 .sidebar-new-btn:hover {
   background: var(--accent-bg);
   border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(212, 160, 23, 0.15);
+  box-shadow: 0 2px 8px rgba(240, 185, 41, 0.15);
 }
 
 .sidebar-new-icon {
