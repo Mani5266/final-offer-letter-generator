@@ -167,14 +167,20 @@ function switchPage(page) {
   currentPage = page;
   const generatorPage = document.getElementById('generatorPage');
   const historyPage = document.getElementById('historyPage');
+  const navGenBtn = document.getElementById('navGeneratorBtn');
+  const navHistBtn = document.getElementById('navHistoryBtn');
 
   if (page === 'generator') {
     generatorPage.classList.remove('hidden');
     historyPage.classList.add('hidden');
+    if (navGenBtn) navGenBtn.classList.add('active');
+    if (navHistBtn) navHistBtn.classList.remove('active');
     if (!_skipHashPush) updateHash();
   } else {
     generatorPage.classList.add('hidden');
     historyPage.classList.remove('hidden');
+    if (navGenBtn) navGenBtn.classList.remove('active');
+    if (navHistBtn) navHistBtn.classList.add('active');
     if (!_skipHashPush) location.hash = '#history';
     fetchOffers();
   }
@@ -1125,10 +1131,6 @@ async function init() {
   if (emailEl && session.user?.email) {
     emailEl.textContent = session.user.email;
   }
-  const avatarEl = document.getElementById('appAvatar');
-  if (avatarEl && session.user?.email) {
-    avatarEl.textContent = session.user.email.charAt(0).toUpperCase();
-  }
 
   // Load dashboard directly
   loadDraft();
@@ -1173,6 +1175,12 @@ async function init() {
 
   // Sidebar: View All -> switch to history
   document.getElementById('viewAllBtn').onclick = () => switchPage('history');
+
+  // Sidebar bottom nav: Generator / History toggle
+  const navGenBtn = document.getElementById('navGeneratorBtn');
+  const navHistBtn = document.getElementById('navHistoryBtn');
+  if (navGenBtn) navGenBtn.onclick = () => switchPage('generator');
+  if (navHistBtn) navHistBtn.onclick = () => switchPage('history');
 
   // History page: Refresh
   document.getElementById('refreshListBtn').onclick = fetchOffers;
@@ -1251,6 +1259,15 @@ async function init() {
   if (allBtn) {
     const originalHandler = allBtn.onclick;
     allBtn.onclick = () => { closeMobileMenu(); if (originalHandler) originalHandler(); };
+  }
+  // Close mobile menu when bottom nav buttons are tapped
+  if (navGenBtn) {
+    const origGen = navGenBtn.onclick;
+    navGenBtn.onclick = () => { closeMobileMenu(); if (origGen) origGen(); };
+  }
+  if (navHistBtn) {
+    const origHist = navHistBtn.onclick;
+    navHistBtn.onclick = () => { closeMobileMenu(); if (origHist) origHist(); };
   }
 
   // Hash-based routing: restore state from URL hash and listen for back/forward

@@ -1,14 +1,22 @@
 :root {
-  /* Core Colors */
-  --primary: #0f172a;       /* Slate 900 */
-  --primary-light: #1e293b; /* Slate 800 */
+  /* Core Colors — Dark Navy */
+  --primary: #0f172a;       /* Navy 900 */
+  --primary-light: #1e293b; /* Navy 800 */
+
+  /* Gold / Amber Accent */
+  --accent: #d4a017;        /* Rich Gold */
+  --accent-light: #e6b422;  /* Bright Gold */
+  --accent-bg: #fdf8e8;     /* Gold tint background */
+  --accent-dark: #b8860b;   /* Dark Gold */
+  --accent-border: #e6c54d; /* Gold border */
 
   /* Backgrounds */
-  --bg-main: #f8fafc;       /* Slate 50 */
+  --bg-main: #f5f1e8;       /* Warm cream */
   --bg-card: #ffffff;
+  --bg-form: #fffdf5;       /* Light cream for form sections */
 
   /* Text */
-  --text-main: #1e293b;     /* Slate 800 */
+  --text-main: #1e293b;     /* Navy 800 */
   --text-muted: #64748b;    /* Slate 500 */
   --text-on-dark: #f8fafc;
 
@@ -23,20 +31,24 @@
   --success-bg: #ecfdf5;
   --success-border: #d1fae5;
 
-  /* Accent (Indigo) */
-  --accent: #6366f1;
-  --accent-bg: #eef2ff;
-  --accent-dark: #4f46e5;
-
   /* Misc */
   --green-dark: #059669;     /* Download/action buttons */
-  --text-light: #cbd5e1;     /* Slate 300 — light text on dark bg */
+  --text-light: #94a3b8;     /* Slate 400 — light text on dark bg */
+
+  /* Sidebar */
+  --sidebar-bg: #0f172a;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #1e293b;
+  --sidebar-text: #e2e8f0;
+  --sidebar-text-muted: #94a3b8;
 
   /* Borders & Shadows */
-  --border: #e2e8f0;        /* Slate 200 */
+  --border: #e2d9c8;        /* Warm border */
+  --border-light: #f0e9d8;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-gold: 0 4px 12px rgba(212, 160, 23, 0.15);
 
   /* Spacing Scale (4px base) */
   --space-1: 0.25rem;  /*  4px */

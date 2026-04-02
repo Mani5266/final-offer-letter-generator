@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   LOGIN PAGE — Split Panel Layout
+   LOGIN PAGE — Split Panel Layout (Navy + Gold Theme)
    ══════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after {
@@ -37,7 +37,7 @@ body {
   right: -80px;
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(212, 160, 23, 0.12) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -47,14 +47,15 @@ body {
   top: 0;
   right: 0;
   width: 100%;
-  height: 6px;
-  background: linear-gradient(90deg, #0f172a 0%, #1e293b 40%, #334155 70%, #0f172a 100%);
+  height: 4px;
+  background: linear-gradient(90deg, #0f172a 0%, #d4a017 40%, #e6b422 60%, #0f172a 100%);
 }
 
 .brand {
   font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+  color: #d4a017;
 }
 
 .divider {
@@ -106,7 +107,7 @@ body {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(212, 160, 23, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,7 +132,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: #f5f1e8;
   padding: 2.5rem;
 }
 
@@ -159,9 +160,10 @@ body {
 .login-tabs {
   display: flex;
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e2d9c8;
   border-radius: 10px;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .login-tab {
@@ -178,8 +180,9 @@ body {
 }
 
 .login-tab.active {
-  background: #0f172a;
-  color: #ffffff;
+  background: #d4a017;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 /* ── Form ─────────────────────────────────────────────────────── */
@@ -200,17 +203,18 @@ body {
   width: 100%;
   padding: 0.75rem 1rem;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #e2d9c8;
   border-radius: 8px;
   color: #0f172a;
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-group input:focus {
-  border-color: #0f172a;
+  border-color: #d4a017;
+  box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.1);
 }
 
 .form-group input::placeholder {
@@ -220,20 +224,22 @@ body {
 .btn-submit {
   width: 100%;
   padding: 0.85rem;
-  background: #0f172a;
-  color: #fff;
+  background: #d4a017;
+  color: #0f172a;
   border: none;
   border-radius: 8px;
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: opacity 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(212, 160, 23, 0.15);
 }
 
 .btn-submit:hover {
-  opacity: 0.9;
+  background: #e6b422;
+  box-shadow: 0 6px 18px rgba(212, 160, 23, 0.25);
 }
 
 .btn-submit:disabled {
@@ -275,7 +281,7 @@ body {
 }
 
 .form-footer a {
-  color: #0f172a;
+  color: #d4a017;
   text-decoration: none;
   cursor: pointer;
   font-weight: 600;
